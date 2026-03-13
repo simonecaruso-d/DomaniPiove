@@ -7,4 +7,4 @@ import configuration.Configuration as Configuration
 import db.ReadFromSupabase as SupabaseReader
 
 # Run
-print(SupabaseReader.SafeTableRead(Configuration.SupabaseUrl, Configuration.SupabaseKey, tableName='City'))
+print(SupabaseReader.SafeTableRead(Configuration.SupabaseUrl, Configuration.SupabaseKey, tableName='Calendar'))
