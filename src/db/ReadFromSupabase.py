@@ -1,9 +1,14 @@
 # Environment Setting
+import os
 import pandas as pd
 import random
 from supabase import Client, create_client
+import sys
 import time
-from typing import Any, Iterator, Mapping, Optional, Sequence
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+import configuration.Configuration as Configuration
 
 # Helpers
 def BuildSelectClause(columns):
@@ -51,19 +56,15 @@ def SafeTableChunkFetch(supabaseClient, tableName, selectClause, filters, orderB
     return None, lastException
 
 # Reading Tables
-def SafeTableRead(supaBaseUrl, supabaseKey,
-                   tableName, columns = None, filters = None, orderBy = None, ascending = True, pageSize = 1000,
-                   maxRetries = 4, baseRetryDelaySeconds = 0.7, jitterSeconds = 0.2, returnPartialOnError = True, raiseOnError = False):
+def SafeTableRead(supaBaseUrl = Configuration.SupabaseUrl, supabaseKey = Configuration.SupabaseKey,
+                   tableName = '', columns = None, filters = None, orderBy = None, ascending = True, pageSize = Configuration.SupabasePageSize,
+                   maxRetries = Configuration.MaxRetries, baseRetryDelaySeconds = Configuration.BaseRetryDelaySeconds, jitterSeconds = Configuration.JitterSeconds):
     'Reads an entire Supabase table into a DataFrame, handling pagination, retries, and errors according to parameters'
     selectClause   = BuildSelectClause(columns)
     safePageSize   = max(1, min(pageSize, 1000))
     safeMaxRetries = max(1, maxRetries)
 
-    try: supabaseClient: Client = create_client(supaBaseUrl, supabaseKey)
-    except Exception as clientError:
-        if raiseOnError: raise
-        print(f'Error creating Supabase client: {clientError}')
-        return None
+    supabaseClient: Client = create_client(supaBaseUrl, supabaseKey)
 
     allRows = []
     offset  = 0
@@ -73,10 +74,10 @@ def SafeTableRead(supaBaseUrl, supabaseKey,
                                                       offset, safePageSize, safeMaxRetries, baseRetryDelaySeconds, jitterSeconds)
 
         if pageRows is None:
-            if raiseOnError and lastException is not None: raise RuntimeError(f"Failed to read table '{tableName}' at offset {offset} after {safeMaxRetries} attempts") from lastException
+            if lastException is not None: raise RuntimeError(f"Failed to read table '{tableName}' at offset {offset} after {safeMaxRetries} attempts") from lastException
             print(f"Error reading table '{tableName}' at offset {offset} after {safeMaxRetries} attempts: {lastException}")
 
-            if returnPartialOnError and allRows: break
+            if allRows: break
             return None
 
         if not pageRows: break
