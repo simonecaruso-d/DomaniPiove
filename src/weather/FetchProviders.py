@@ -6,16 +6,16 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import configuration.Configuration   as Configuration
+import configuration.ConfigurationWeather   as Configuration
 
 import db.ReadFromSupabase           as SupabaseReader
 import db.WriteToSupabase            as SupabaseWriter
 
-import getData.FetchOpenMeteo        as OM
-import getData.FetchOpenMeteoArchive as OMA
-import getData.FetchMetNorway        as MN
-import getData.FetchVisualCrossing   as VC
-import getData.FetchBrightSky        as BS
+import weather.FetchOpenMeteo        as OM
+import weather.FetchOpenMeteoArchive as OMA
+import weather.FetchMetNorway        as MN
+import weather.FetchVisualCrossing   as VC
+import weather.FetchBrightSky        as BS
 
 # Functions
 def FetchCityForecasts(cityId, latitude, longitude):

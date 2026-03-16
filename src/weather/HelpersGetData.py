@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import configuration.Configuration as Configuration
+import configuration.ConfigurationWeather as Configuration
 
 # Request
 def SafeRequest(url, params, providerName, headers=None,
