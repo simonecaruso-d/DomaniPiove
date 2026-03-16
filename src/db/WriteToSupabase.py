@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import configuration.Configuration as Configuration
+import configuration.ConfigurationWeather as Configuration
 
 # Helpers
 def NormalizeIsoDatetime(value):

@@ -5,8 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import configuration.Configuration as Configuration
-import getData.HelpersGetData as Helpers
+import configuration.ConfigurationWeather as Configuration
+import weather.HelpersGetData as Helpers
 
 # Functions
 def BuildOpenMeteoParams(latitude, longitude, forecastDays):
