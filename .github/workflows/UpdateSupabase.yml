@@ -51,4 +51,4 @@ jobs:
           VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
           PIRATE_WEATHER_API_KEY: ${{ secrets.PIRATE_WEATHER_API_KEY }}
         run: |
-          python src/getData/FetchProviders.py
+          python src/weather/FetchProviders.py
