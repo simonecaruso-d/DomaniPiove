@@ -71,3 +71,14 @@ CREATE TABLE "Actual" (
     UNIQUE ("Datetime", "CityId"));
 
 CREATE INDEX "IdxActualCityDatetime" ON "Actual" ("CityId", "Datetime");
+
+-- StaticEvents
+CREATE TABLE "StaticEvents" (
+    "Id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "Name" VARCHAR(100) NOT NULL,
+    "Category" VARCHAR(50) NOT NULL,
+    "Cost" VARCHAR(50),
+    "IsIndoor" VARCHAR(50) CHECK ("IsIndoor" IN ('Y', 'N', 'Both')),
+    "EnergyLevel" VARCHAR(50),
+    "SocialLevel" VARCHAR(50),
+    "Duration" VARCHAR(50));
