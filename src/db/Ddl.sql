@@ -82,3 +82,24 @@ CREATE TABLE "StaticEvents" (
     "EnergyLevel" VARCHAR(50),
     "SocialLevel" VARCHAR(50),
     "Duration" VARCHAR(50));
+
+-- Forecast Accuracy By Day Span
+CREATE TABLE "ForecastAccuracyByDaySpan" (
+    "Id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "Provider" VARCHAR(50) NOT NULL,
+    "DaySpan" INT NOT NULL,
+    "Metric" VARCHAR(20) NOT NULL,
+    "MAE" DOUBLE PRECISION NOT NULL,
+    "MAPE" DOUBLE PRECISION NOT NULL,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
+-- Forecast Accuracy By Provider
+CREATE TABLE "ForecastAccuracyByProvider" (
+    "Id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "Provider" VARCHAR(50) NOT NULL,
+    "Metric" VARCHAR(20) NOT NULL,
+    "MAE" DOUBLE PRECISION NOT NULL,
+    "MAPE" DOUBLE PRECISION NOT NULL,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW());
