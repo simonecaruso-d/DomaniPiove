@@ -13,6 +13,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import configuration.ConfigurationWeather as Configuration
 
+DB_SAFE_METRIC_NAME_MAP = {'PrecipitationProbability': 'PrecipitationProb'}
+
 # Helpers
 def NormalizeIsoDatetime(value):
     'Validate datetime is timezone-aware UTC and return ISO string; fails on naive/non-UTC values'
@@ -81,6 +83,21 @@ def ExecuteWithRetry(operationFactory, operationDescription, maxRetries=Configur
 def ChunkValues(values, chunkSize=200):
     'Yield list chunks to keep query size bounded'
     for index in range(0, len(values), chunkSize): yield values[index:index + chunkSize]
+
+def NormalizeMetricName(value, maxLength=20):
+    'Normalize metric names to DB-safe labels and validate max length'
+    if value is None: return None
+
+    normalizedValue = DB_SAFE_METRIC_NAME_MAP.get(str(value), str(value))
+    if len(normalizedValue) > maxLength: raise ValueError(f"Metric value '{normalizedValue}' exceeds max length {maxLength}")
+    return normalizedValue
+
+def PrepareAccuracyDataFrame(dataFrame, metricColumn='Metric', maxMetricLength=20):
+    'Return a copy with metric names normalized for accuracy tables'
+    preparedDataFrame = dataFrame.copy()
+    if metricColumn in preparedDataFrame.columns:
+        preparedDataFrame[metricColumn] = preparedDataFrame[metricColumn].map(lambda value: NormalizeMetricName(value, maxMetricLength))
+    return preparedDataFrame
 
 def PrepareRecordsForInsert(dataFrame, datetimeColumns, integerColumns=None):
     'Prepare DataFrame rows for Supabase insert, sanitizing values and datetimes'
@@ -169,3 +186,60 @@ def WriteActualToSupabase(actualDf, supabaseUrl=Configuration.SupabaseUrl, supab
 
     except Exception as writeError:
         raise RuntimeError(f'Error writing Actual to Supabase: {writeError}') from writeError
+
+def WriteForecastAccuracyByDaySpanToSupabase(byDaySpanDf, supabaseUrl=Configuration.SupabaseUrl, supabaseKey=Configuration.SupabaseKey,
+                                             batchSize=Configuration.WriteBatchSize, tableName='ForecastAccuracyByDaySpan'):
+    'SCD Type1 on overlap: delete existing rows by (Provider, Metric, DaySpan), then insert incoming rows'
+    if byDaySpanDf is None or byDaySpanDf.empty: return {'RowsDeletedForOverlap': 0, 'RowsInserted': 0}
+
+    try:
+        supabaseClient: Client = create_client(supabaseUrl, supabaseKey)
+
+        preparedByDaySpanDf          = PrepareAccuracyDataFrame(byDaySpanDf, maxMetricLength=20)
+        uniqueCombinations           = preparedByDaySpanDf[['Provider', 'Metric', 'DaySpan']].drop_duplicates().copy()
+        uniqueCombinations['DaySpan'] = uniqueCombinations['DaySpan'].map(lambda value: NormalizeIntegerValue(value, 'DaySpan'))
+        groupedKeys                  = uniqueCombinations.groupby(['Provider', 'Metric'])['DaySpan'].agg(lambda values: sorted(set(values)))
+
+        rowsDeletedForOverlap = 0
+        for (provider, metric), daySpanValues in tqdm(groupedKeys.items(), total=len(groupedKeys), desc='ForecastAccuracyByDaySpan | Delete overlaps'):
+            for daySpanChunk in ChunkValues(daySpanValues):
+                ExecuteWithRetry(lambda provider=provider, metric=metric, daySpanChunk=daySpanChunk:
+                                 (supabaseClient.table(tableName).delete().eq('Provider', provider).eq('Metric', metric).in_('DaySpan', daySpanChunk).execute()),
+                                 f'ForecastAccuracyByDaySpan overlap delete for Provider={provider}, Metric={metric}')
+
+            rowsDeletedForOverlap += len(daySpanValues)
+
+        records      = PrepareRecordsForInsert(preparedByDaySpanDf, set(), {'DaySpan'})
+        rowsInserted = InsertInBatches(supabaseClient, tableName, records, batchSize, 'ForecastAccuracyByDaySpan | Insert rows')
+
+        return {'RowsDeletedForOverlap': rowsDeletedForOverlap, 'RowsInserted': rowsInserted}
+
+    except Exception as writeError: raise RuntimeError(f'Error writing ForecastAccuracyByDaySpan to Supabase: {writeError}') from writeError
+
+def WriteForecastAccuracyByProviderToSupabase(byProviderDf, supabaseUrl=Configuration.SupabaseUrl, supabaseKey=Configuration.SupabaseKey,
+                                    batchSize=Configuration.WriteBatchSize, tableName='ForecastAccuracyByProvider'):
+    'SCD Type1 on overlap: delete existing rows by (Provider, Metric), then insert incoming rows'
+    if byProviderDf is None or byProviderDf.empty: return {'RowsDeletedForOverlap': 0, 'RowsInserted': 0}
+
+    try:
+        supabaseClient: Client = create_client(supabaseUrl, supabaseKey)
+
+        preparedByProviderDf = PrepareAccuracyDataFrame(byProviderDf, maxMetricLength=20)
+        uniqueCombinations   = preparedByProviderDf[['Provider', 'Metric']].drop_duplicates().copy()
+        groupedKeys          = uniqueCombinations.groupby(['Provider'])['Metric'].agg(lambda values: sorted(set(values)))
+
+        rowsDeletedForOverlap = 0
+        for provider, metricValues in tqdm(groupedKeys.items(), total=len(groupedKeys), desc='ForecastAccuracyByProvider | Delete overlaps'):
+            for metricChunk in ChunkValues(metricValues):
+                ExecuteWithRetry(lambda provider=provider, metricChunk=metricChunk:
+                                 (supabaseClient.table(tableName).delete().eq('Provider', provider).in_('Metric', metricChunk).execute()),
+                                 f'ForecastAccuracyByProvider overlap delete for Provider={provider}')
+
+            rowsDeletedForOverlap += len(metricValues)
+
+        records      = PrepareRecordsForInsert(preparedByProviderDf, set(), set())
+        rowsInserted = InsertInBatches(supabaseClient, tableName, records, batchSize, 'ForecastAccuracyByProvider | Insert rows')
+
+        return {'RowsDeletedForOverlap': rowsDeletedForOverlap, 'RowsInserted': rowsInserted}
+
+    except Exception as writeError: raise RuntimeError(f'Error writing ForecastAccuracyByProvider to Supabase: {writeError}') from writeError
