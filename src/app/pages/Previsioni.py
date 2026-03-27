@@ -406,22 +406,26 @@ def GroupDf(df):
 
 def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
     month = row['Datetime'].month
-    if month in [7, 8, 9]   : p = Configuration.ThresholdsSummer
-    elif month in [1, 2, 4] : p = Configuration.ThresholdsWinter
-    elif month in [4, 5, 6] : p = Configuration.ThresholdsSpring
-    else                    : p = Configuration.ThresholdsFall
+    if month in [6, 7, 8]      : p = Configuration.ThresholdsSummer
+    elif month in [12, 1, 2]   : p = Configuration.ThresholdsWinter
+    elif month in [3, 4, 5]    : p = Configuration.ThresholdsSpring
+    else                       : p = Configuration.ThresholdsFall
     
     scoreVisibility               = 1 if row['Visibility'] > p['VisibilityThreshold'] else max(0, row['Visibility'] / p['VisibilityThreshold'])
     scorePrecipitationProbability = 1 if row['PrecipitationProbability'] < p['PrecipProbThreshold'] else max(0, 1 - (row['PrecipitationProbability'] - p['PrecipProbThreshold']) / (1 - p['PrecipProbThreshold']))
-    scoreRain                     = 1 if row['Rain'] < 0.5 else max(0, 1 - (row['Rain'] - 0.5) / p['RainMaxTolerance'])
+    scoreRain                     = 1 if row['Rain'] < p['RainFreeMm'] else max(0, 1 - (row['Rain'] - p['RainFreeMm']) / p['RainMaxTolerance'])
     scoreSnowfall                 = 1 if row['Snowfall'] < p['SnowMaxTolerance'] else max(0, 1 - row['Snowfall'] / p['SnowMaxTolerance'])
     scoreWind                     = 1 if row['WindSpeed'] < p['WindThreshold'] else max(0, 1 - (row['WindSpeed'] - p['WindThreshold']) / p['WindThreshold'])
     scoreFeltTemperature          = np.exp(-(max(0, abs(row['Temperature'] - p['TempTarget']) - 2)**2) / (2 * p['TempTolerance']**2))
     scoreHumidity                 = np.exp(-(max(0, abs(row['Humidity'] - p['HumidityTarget']) - 0.05)**2) / (2 * 0.25**2))
     scoreCloudCover               = 1 - (row['CloudCover'])**p['CloudImpactExp']
+    scorePrecipitationProbability = scorePrecipitationProbability**p['PrecipitationPenaltyExp']
+    scoreRain                     = scoreRain**p['RainPenaltyExp']
 
     comfortScore   = (scoreFeltTemperature * weights['ScoreFeltTemperature'] + scoreCloudCover * weights['ScoreCloudCover'] + scorePrecipitationProbability * weights['ScorePrecipitationProbability'] + scoreWind * weights['ScoreWind'] + scoreVisibility * weights['ScoreVisibility'] + scoreHumidity * weights['ScoreHumidity'])
     weatherBlocker = min(scoreRain, scoreSnowfall)
+    cloudRainPenalty = 1 - (p['CloudRainInteractionWeight'] * ((1 - scoreCloudCover) * (1 - scorePrecipitationProbability)))
+    finalScore = np.clip(comfortScore * weatherBlocker * cloudRainPenalty, 0, 1)
     
     return pd.Series({
         'ScorePrecipitationProbability': scorePrecipitationProbability,
@@ -432,7 +436,7 @@ def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
         'ScoreWind'                    : scoreWind,
         'ScoreVisibility'              : scoreVisibility,
         'ScoreFeltTemperature'         : scoreFeltTemperature,
-        'FinalScore'                   : (comfortScore * weatherBlocker).round(2)})
+        'FinalScore'                   : round(finalScore, 2)})
 
 def CalculateScore(df):
     df['Datetime'] = pd.to_datetime(df['Datetime'])

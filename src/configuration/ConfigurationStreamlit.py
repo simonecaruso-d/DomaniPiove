@@ -152,10 +152,10 @@ PartOfDayToEng = {v: k for k, v in PartOfDayToIta.items()}
 # Specific Assets - Table for Advice
 ScoresWeights    = {'ScoreFeltTemperature': 0.3, 'ScoreCloudCover': 0.25, 'ScorePrecipitationProbability': 0.25, 'ScoreWind': 0.1, 'ScoreVisibility': 0.05, 'ScoreHumidity': 0.05}
 
-ThresholdsFall   = {'TempTarget': 19, 'TempTolerance': 6, 'CloudImpactExp': 2.0, 'WindThreshold': 12, 'HumidityTarget': 0.50, 'RainMaxTolerance': 7.0, 'SnowMaxTolerance': 1.0, 'PrecipProbThreshold': 0.1, 'VisibilityThreshold': 10000}
-ThresholdsSpring = {'TempTarget': 20, 'TempTolerance': 5, 'CloudImpactExp': 1.5, 'WindThreshold': 15, 'HumidityTarget': 0.45, 'RainMaxTolerance': 7.0, 'SnowMaxTolerance': 1.0, 'PrecipProbThreshold': 0.1, 'VisibilityThreshold': 10000}
-ThresholdsWinter = {'TempTarget': 12, 'TempTolerance': 4, 'CloudImpactExp': 2.0, 'WindThreshold': 10, 'HumidityTarget': 0.55, 'RainMaxTolerance': 6.0, 'SnowMaxTolerance': 2.0, 'PrecipProbThreshold': 0.1, 'VisibilityThreshold': 10000}
-ThresholdsSummer = {'TempTarget': 25, 'TempTolerance': 5, 'CloudImpactExp': 1.0, 'WindThreshold': 20, 'HumidityTarget': 0.40, 'RainMaxTolerance': 3.0, 'SnowMaxTolerance': 0.0, 'PrecipProbThreshold': 0.1, 'VisibilityThreshold': 10000}
+ThresholdsFall   = {'TempTarget': 19, 'TempTolerance': 6, 'CloudImpactExp': 2.0, 'WindThreshold': 12, 'HumidityTarget': 0.50, 'RainFreeMm': 0.2, 'RainMaxTolerance': 5.0, 'RainPenaltyExp': 1.35, 'SnowMaxTolerance': 1.0, 'PrecipProbThreshold': 0.1, 'PrecipitationPenaltyExp': 1.25, 'CloudRainInteractionWeight': 0.45, 'VisibilityThreshold': 10000}
+ThresholdsSpring = {'TempTarget': 20, 'TempTolerance': 5, 'CloudImpactExp': 1.6, 'WindThreshold': 15, 'HumidityTarget': 0.45, 'RainFreeMm': 0.2, 'RainMaxTolerance': 5.0, 'RainPenaltyExp': 1.35, 'SnowMaxTolerance': 1.0, 'PrecipProbThreshold': 0.1, 'PrecipitationPenaltyExp': 1.25, 'CloudRainInteractionWeight': 0.45, 'VisibilityThreshold': 10000}
+ThresholdsWinter = {'TempTarget': 12, 'TempTolerance': 4, 'CloudImpactExp': 2.2, 'WindThreshold': 10, 'HumidityTarget': 0.55, 'RainFreeMm': 0.1, 'RainMaxTolerance': 4.0, 'RainPenaltyExp': 1.45, 'SnowMaxTolerance': 2.0, 'PrecipProbThreshold': 0.1, 'PrecipitationPenaltyExp': 1.35, 'CloudRainInteractionWeight': 0.50, 'VisibilityThreshold': 10000}
+ThresholdsSummer = {'TempTarget': 25, 'TempTolerance': 5, 'CloudImpactExp': 1.2, 'WindThreshold': 20, 'HumidityTarget': 0.40, 'RainFreeMm': 0.3, 'RainMaxTolerance': 2.5, 'RainPenaltyExp': 1.25, 'SnowMaxTolerance': 0.0, 'PrecipProbThreshold': 0.1, 'PrecipitationPenaltyExp': 1.20, 'CloudRainInteractionWeight': 0.35, 'VisibilityThreshold': 10000}
 
 # Specific Assets - Loader
 LoadingMessages = [
