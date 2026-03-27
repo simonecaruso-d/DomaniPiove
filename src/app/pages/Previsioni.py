@@ -465,13 +465,14 @@ def GetMotivation(row):
 
 def CreateSummary(df):
     summaryDf = df.copy()
+    weekdayNamesIt = {0: 'Lunedi', 1: 'Martedi', 2: 'Mercoledi', 3: 'Giovedi', 4: 'Venerdi', 5: 'Sabato', 6: 'Domenica'}
 
     summaryDf['PartOfDay'] = pd.Categorical(summaryDf['PartOfDay'], categories=Configuration.PartOfDayOrder, ordered=True)
     summaryDf = summaryDf.sort_values(by=['Datetime', 'PartOfDay'])
 
     summaryDf['Datetime']               = pd.to_datetime(summaryDf['Datetime'])
     summaryDf['Data']                   = summaryDf['Datetime'].dt.strftime('%d/%m/%Y')
-    summaryDf['Giorno della settimana'] = summaryDf['Datetime'].dt.day_name(locale='it_IT').str.capitalize()
+    summaryDf['Giorno della settimana'] = summaryDf['Datetime'].dt.dayofweek.map(weekdayNamesIt)
     summaryDf['Parte del giorno']       = summaryDf['PartOfDay'].map(Configuration.PartOfDayToIta)
     summaryDf['Punteggio']              = summaryDf['FinalScore'].apply(lambda x: f'{100*x:.0f}%')
     summaryDf['Indicazione']            = summaryDf['FinalScore'].apply(lambda x: GetStatus(x))
