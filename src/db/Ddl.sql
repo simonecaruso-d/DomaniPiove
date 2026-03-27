@@ -103,3 +103,27 @@ CREATE TABLE "ForecastAccuracyByProvider" (
     "MAPE" DOUBLE PRECISION NOT NULL,
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
+-- Visit Events (Streamlit Analytics)
+CREATE TABLE "VisitEvents" (
+    "Id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "EventTs" TIMESTAMPTZ NOT NULL,
+    "VisitId" UUID NOT NULL,
+    "SessionId" VARCHAR(100) NOT NULL,
+    "EventType" VARCHAR(50) NOT NULL,
+    "Page" VARCHAR(50) NOT NULL,
+    "AppVersion" VARCHAR(30),
+    "UserAgent" TEXT,
+    "Referrer" TEXT,
+    "IpHash" VARCHAR(128),
+    "QueryParams" JSONB NOT NULL DEFAULT '{}'::jsonb,
+    "HeadersSample" JSONB NOT NULL DEFAULT '{}'::jsonb,
+    "Payload" JSONB NOT NULL DEFAULT '{}'::jsonb,
+    "SessionStartedAt" TIMESTAMPTZ,
+    "SessionElapsedSeconds" INT,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW());
+
+CREATE INDEX "IdxVisitEventsEventTs"   ON "VisitEvents" ("EventTs");
+CREATE INDEX "IdxVisitEventsVisitId"   ON "VisitEvents" ("VisitId");
+CREATE INDEX "IdxVisitEventsEventType" ON "VisitEvents" ("EventType");
+CREATE INDEX "IdxVisitEventsPage"      ON "VisitEvents" ("Page");
