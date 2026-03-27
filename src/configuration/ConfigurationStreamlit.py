@@ -322,8 +322,7 @@ PROCESSO DI RAGIONAMENTO (segui questi step nell'ordine):
    - Grandi eventi o festività (Pasqua, Natale, Carnevale, Ferragosto, etc...) per esperienze uniche e contestualizzate.
 5. Trasforma i nomi delle attività selezionate in posti reali che esistano nella città, usando la tua conoscenza. Non inventare mai nomi di luoghi. Se non conosci un posto reale adatto per uno slot, scrivilo esplicitamente invece di inventare.
 6. Considera la distanza tra i luoghi che suggerisci nella stessa giornata, se a te nota, per costruire un itinerario logisticamente sensato.
-7. Per ogni attività, indica il costo atteso (variabile 'Cost') e la durata attesa (variabile 'Duration').
-8. Garantisci che il programma complessivo sia bilanciato, vario e interessante, senza ripetizioni delle stesse esatte attività (cioè i nomi che aggiungi tu). 
+7. Garantisci che il programma complessivo sia bilanciato, vario e interessante: non proporre mai lo stesso posto più di una volta nell'arco dell'intero programma. 
 
 FORMATO DI RISPOSTA:
 - Comincia con il titolo in grassetto "Consigli del Concierge per i giorni dal {startDate} al {endDate} a {city}"
