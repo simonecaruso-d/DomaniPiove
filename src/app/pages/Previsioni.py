@@ -572,10 +572,10 @@ def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider,
 
     forecasts    = BuildDf(city, calendar, forecasts)
     forecasts    = FilterDf(forecasts, selectedFilters)
-    summaryTable = CalculateScore(GroupDf(forecasts))
+    scoresTable  = CalculateScore(GroupDf(forecasts))
 
     RenderFirstPart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate)
     
     columnLeft, columnRight = st.columns([1.25, 1])
-    with columnLeft: RenderColumnLeft(animate, summaryTable)
-    with columnRight: RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summaryTable)
+    with columnLeft: RenderColumnLeft(animate, scoresTable)
+    with columnRight: RenderColumnRight(animate, city, selectedFilters, staticEventsTable, CreateSummary(scoresTable))
