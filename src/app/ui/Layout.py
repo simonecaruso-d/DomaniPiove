@@ -150,7 +150,7 @@ def RenderStyles(logo,
             .custom-topbar {{position: fixed; top: 0; left: 60px; right: 0; height: 60px; background: linear-gradient(100deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.00) 40%); display: flex; align-items: center; padding: 0 24px; gap: 12px; z-index: 999998; pointer-events: none; transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1); backdrop-filter: blur(4px) saturate(130%);}}
             body:has([data-testid="stSidebar"][aria-expanded="true"]) .custom-topbar {{left: 244px;}}
             body:has([data-testid="stSidebar"][aria-expanded="false"]) .custom-topbar {{left: 76px;}}
-            .custom-topbar img {{height: 30px; width: auto; filter: drop-shadow(0 0 8px rgba(255,255,255,0.48));}}
+            .custom-topbar img {{height: 34px; width: auto; filter: drop-shadow(0 0 8px rgba(255,255,255,0.48));}}
             .custom-topbar span {{color: {Configuration.WhiteColor}; font-size: 18px; font-weight: 700; letter-spacing: 0.45px; text-shadow: 0 0 18px rgba(255,255,255,0.36), 0 0 34px rgba(171,134,116,0.42);}}
             .topbar-live {{margin-left: auto; display: flex; align-items: center; gap: 7px; color: {Configuration.WhiteColor}; font-size: 9px; font-weight: 500; letter-spacing: 0.15px; white-space: nowrap; pointer-events: none; transform: scale(0.75); transform-origin: right center;}}
             .topbar-live-dot {{flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: dp-live-pulse 2.4s ease-in-out infinite;}}
