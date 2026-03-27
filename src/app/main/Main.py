@@ -23,9 +23,8 @@ def RunLoad(resultHolder, doneEvent):
     finally: doneEvent.set()
 
 # Data Loading
-@st.cache_data(ttl=3600)
 def LoadData():
-    'Load cached city and forecasts data from Supabase.'
+    'Load city and forecasts data from Supabase.'
     tableReadTasks = {
         'StaticEvents'              : lambda: SupabaseReader.SafeTableRead(tableName='StaticEvents', columns='*'),
         'Calendar'                  : lambda: SupabaseReader.SafeTableRead(tableName='Calendar', columns='*'),
