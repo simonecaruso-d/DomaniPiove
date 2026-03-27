@@ -1,6 +1,7 @@
 # Environment Setting
 from pathlib import Path
 import streamlit as st
+import threading
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
@@ -14,6 +15,12 @@ import app.pages.Accuratezza                as AccuracyElements
 import app.pages.Previsioni                 as ForecastElements
 import db.ReadFromSupabase                  as SupabaseReader
 import db.TrackDashboardVisits              as VisitTracker
+
+# Helpers
+def RunLoad(resultHolder, doneEvent):
+    try: resultHolder['data'] = LoadData()
+    except Exception as e: resultHolder['error'] = e
+    finally: doneEvent.set()
 
 # Data Loading
 @st.cache_data(ttl=1800)
@@ -76,14 +83,19 @@ def Main():
     isFirstLoad = 'app_data' not in st.session_state
 
     if isFirstLoad:
-        try:
-            with st.spinner('Caricamento dati in corso...'):
-                st.session_state['app_data'] = LoadData()
-        except Exception as loadError:
-            st.error(f"Errore nel caricamento dei dati: {loadError}")
+        resultHolder = {}
+        doneEvent    = threading.Event()
+
+        threading.Thread(target=RunLoad, args=(resultHolder, doneEvent), daemon=True).start()
+
+        if not doneEvent.wait(timeout=0.3): Loader.RenderLoader(doneEvent)
+
+        if 'error' in resultHolder:
+            st.error(f"Errore nel caricamento dei dati: {resultHolder['error']}")
             st.stop()
 
-        staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = st.session_state['app_data']
+        st.session_state['app_data'] = resultHolder['data']
+        staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = resultHolder['data']
     else: staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = st.session_state['app_data']
         
     currentPage = HomeUI.RenderLayout(updateDate=updateDate)

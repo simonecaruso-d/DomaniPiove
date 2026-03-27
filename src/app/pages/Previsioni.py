@@ -394,7 +394,7 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
         hovermode            = 'x unified',
         showlegend           = False)
 
-    st.plotly_chart(figure, width='stretch', config={'displayModeBar': False})
+    st.plotly_chart(figure, use_container_width=True, config={'displayModeBar': False})
 
 # Table
 def GroupDf(df):
@@ -529,7 +529,7 @@ def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summary
     st.markdown(f"<div class='llm-title forecast-enter-item {titleClass2}'>Consigli del Concierge</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='llm-subtitle forecast-enter-item {titleClass2}'>Idee per attività da fare nei prossimi giorni</div>", unsafe_allow_html=True)
 
-    if st.button('✨ Genera Suggerimenti', width='stretch'):
+    if st.button('✨ Genera Suggerimenti', use_container_width=True):
         st.session_state['llm_comment_cache'] = ''
         st.session_state['_streaming_active'] = True
 
