@@ -23,6 +23,7 @@ def RunLoad(resultHolder, doneEvent):
     finally: doneEvent.set()
 
 # Data Loading
+@st.cache_data(ttl=1800)
 def LoadData():
     'Load city and forecasts data from Supabase.'
     tableReadTasks = {
@@ -86,7 +87,8 @@ def Main():
         doneEvent    = threading.Event()
 
         threading.Thread(target=RunLoad, args=(resultHolder, doneEvent), daemon=True).start()
-        Loader.RenderLoader(doneEvent)
+
+        if not doneEvent.wait(timeout=0.3): Loader.RenderLoader(doneEvent)
 
         if 'error' in resultHolder:
             st.error(f"Errore nel caricamento dei dati: {resultHolder['error']}")
