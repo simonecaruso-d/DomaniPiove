@@ -2,7 +2,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 import sys
 import threading
 
@@ -89,7 +88,6 @@ def Main():
         doneEvent    = threading.Event()
 
         thread = threading.Thread(target=RunLoad, args=(resultHolder, doneEvent), daemon=True)
-        add_script_run_ctx(thread, get_script_run_ctx())
         thread.start()
 
         if not doneEvent.wait(timeout=0.3): Loader.RenderLoader(doneEvent)

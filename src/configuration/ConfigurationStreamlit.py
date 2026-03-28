@@ -369,7 +369,7 @@ LoadingMessages = [
 
 # Specific Assets - Texts
 WhoWeAre         = f"""
-    <span style="font-style: italic;">Domani piove?</span> nasce dall\'amore di Simone per il sole, per i dati e per la sua fidanzata Chiara.
+    <span style="font-style: italic;">Domani Piove?</span> nasce dall\'amore di Simone per il sole, per i dati e per la sua fidanzata Chiara.
     <br><br>Simone e Chiara, entrambi di Palermo (☀️), hanno una <strong>relazione a distanza</strong>: lui vive a Roma (🌥️), lei a Padova (☔). Ogni mese, vedersi nella città dell\'uno o dell\'altra significa controllare il meteo per pianificare con cura le attività da svolgere insieme.
     <br><br>L\'idea nasce quando Simone, preoccupato da previsioni meteo non rassicuranti per la settimana in cui Chiara sarebbe venuta a trovarlo, costruisce un file dove <strong>confrontare le previsioni di siti di meteo diversi</strong>, tentando di trarre dalla comparazione la maggior accuratezza possibile.
     <br>Da qui, la scintilla creativa: creare un sito fruibile da chiunque ami il sole (*) o desideri pianificare del tempo di qualità coi propri affetti.
