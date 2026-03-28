@@ -215,7 +215,7 @@ LoadingMessages = [
 WhoWeAre         = f"""
     <span style="font-style: italic;">Domani piove?</span> nasce dall\'amore di Simone per il sole, per i dati e per la sua fidanzata Chiara.
     <br><br>Simone e Chiara, entrambi di Palermo (☀️), hanno una <strong>relazione a distanza</strong>: lui vive a Roma (🌥️), lei a Padova (☔). Ogni mese, vedersi nella città dell\'uno o dell\'altra significa controllare il meteo per pianificare con cura le attività da svolgere insieme.
-    <br><br>L\'idea nasce quando Simone, preoccupato da previsioni meteo non rassicuranti per la settimana in cui Chiara sarebbe venuto a trovarlo, costruisce un file Excel dove <strong>confrontare le previsioni di siti di meteo diversi</strong>, tentando di trarre dalla comparazione la maggior accuratezza possibile.
+    <br><br>L\'idea nasce quando Simone, preoccupato da previsioni meteo non rassicuranti per la settimana in cui Chiara sarebbe venuta a trovarlo, costruisce un file dove <strong>confrontare le previsioni di siti di meteo diversi</strong>, tentando di trarre dalla comparazione la maggior accuratezza possibile.
     <br>Da qui, la scintilla creativa: creare un sito fruibile da chiunque ami il sole (*) o desideri pianificare del tempo di qualità coi propri affetti.
     <br><br><span style="font-size: {FontSize1}; opacity: {Opacity1};">(*ma se magari sperate che domani piova, tranquilli: non starà a noi giudicarvi!)</span>
 """
@@ -230,14 +230,13 @@ HowItWorks       = f"""
 
 ImageCaptions    = {
     'Afoso'     : '📌 <span style="font-style: italic;">Venezia</span>        <br><br> Caldo settembrino in Veneto: quale migliore occasione per visitare Venezia e fare tappa in qualche bacaro?',
-    'Nuvoloso'  : '📌 <span style="font-style: italic;">Appia Antica</span>   <br><br> Quel giorno Simo ha stupito Chiara pianificando una passeggiata in una parte di Roma che lei non avrebbe mai immaginato!',
+    'Nuvoloso'  : '📌 <span style="font-style: italic;">Appia Antica</span>   <br><br> Quel giorno, complice un meteo sereno, Simone ha stupito Chiara pianificando una passeggiata in una parte di Roma che lei non avrebbe mai immaginato!',
     'Piovoso'   : '📌 <span style="font-style: italic;">Ferrara</span>        <br><br> Giornata metereologicamente orribile, ma non ci siamo persi d\'animo! Abbiamo visitato alcuni luoghi di cultura al chiuso, mangiato buona cucina emiliana nella più antica osteria del mondo e addirittura passeggiato in un parco',
     'Soleggiato': '📌 <span style="font-style: italic;">Villa Pamphili</span> <br><br> Con una giornata d\'inverno così soleggiata in cui i primi fiori preannunciano l\'arrivo della primavera, perché non un giro in uno dei più grandi parchi pubblici di Roma?',
     'Ventoso'   : '📌 <span style="font-style: italic;">Ostia</span>          <br><br> Seduti sul pontile ad ammirare le onde: se non piove, il mare d\'inverno è davvero romantico',
 }
 
 # Specific Assets - LLM
-MaxTokens   = 10000
 ModelA      = 'nvidia/nemotron-3-super-120b-a12b:free' # Buono ma lento
 ModelB      = 'liquid/lfm-2.5-1.2b-thinking:free' # Il più veloce
 ModelC      = 'nvidia/nemotron-3-nano-30b-a3b:free' # Scarsino ma veloce
@@ -249,88 +248,112 @@ ModelH      = 'z-ai/glm-4.5-air:free' # mediocre
 ModelI      = 'stepfun/step-3.5-flash:free' # 10k token non bastano
 ModelJ      = 'nvidia/nemotron-3-super-120b-a12b:free' # 10k token non bastano
 ModelK      = 'arcee-ai/trinity-mini:free' # IL VINCITORE
-Temperature = 0.3
-TopP        = 0.9
+LlmFallbackModels    = [ModelK, ModelH, ModelB]
+LlmMaxRetries        = 2
+LlmRetryDelaySeconds = 1.5
+Temperature          = 0.3
+TopP                 = 0.9
+MaxTokens            = 10000
 
-LLMResponseStructure = f"""
-##### _Giorno n - dd/mm/yyyy_
-###### _Mattina_ 🌞
-Lo scenario meteo previsto suggerisce di ...
-Pertanto, ti suggerisco le seguenti attività:
-* Attività 1,
-* Attività 2
-* Attività 3
+LLMResponseStructure = """
+##### **🟢 Vai, esci!**
+_Lo scenario meteorologico è positivo._
 
-> Curiosità: 
+_Pertanto, ti suggerisco le seguenti attività all'aperto:_
 
-###### _Pranzo_ 🍝
-Lo scenario meteo previsto suggerisce di ...
-Pertanto, ti suggerisco le seguenti attività:
-* Attività 1,
-* Attività 2
-* Attività 3
+* Mattina
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
 
-> Curiosità: 
+* Pomeriggio
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
 
-###### _Pomeriggio_ 🍵
-Lo scenario meteo previsto suggerisce di ...
-Pertanto, ti suggerisco le seguenti attività:
-* Attività 1,
-* Attività 2
-* Attività 3
+* Sera/Notte
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
 
-> Curiosità: 
+_Curiosità: xxx_
 
-###### _Cena_ 🍕
-Lo scenario meteo previsto suggerisce di ...
-Pertanto, ti suggerisco le seguenti attività:
-* Attività 1,
-* Attività 2
-* Attività 3
+##### **🟡 Esci, ma fai attenzione**
+_Lo scenario meteorologico è incerto, a causa di fattori come {{mostCommonMotivation}['🟡 Esci, ma fai attenzione']}._
 
-> Curiosità: 
+_Pertanto, ti suggerisco le seguenti attività come mix tra indoor e outdoor, da scegliere in base alle condizioni meteo specifiche che si presenteranno:_
 
-###### _Notte_ 🌖
-Lo scenario meteo previsto suggerisce di ...
-Pertanto, ti suggerisco le seguenti attività:
-* Attività 1,
-* Attività 2
-* Attività 3
+* Mattina
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
 
-> Curiosità: 
-"""
+* Pomeriggio
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
+
+* Sera/Notte
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
+
+_Curiosità: xxx_
+
+##### **🔴 Forse è meglio restare a casa?**
+_Lo scenario meteorologico è negativo, a causa di fattori come {{mostCommonMotivation}['🔴 Forse è meglio restare a casa?']}._
+
+_Pertanto, ti suggerisco di restare a casa e svolgere attività come xxx. In alternativa, se vuoi uscire, ti propongo le seguenti attività indoor:_
+
+* Mattina
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
+
+* Pomeriggio
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
+
+* Sera/Notte
+    * Attività xxx
+    * Attività xxx
+    * Attività xxx
+
+_Curiosità: xxx_"""
 
 LLMPrompt = """
 RUOLO: Sei un "Local Concierge" esperto e raffinato, specializzato nella città di {city}.
-OBIETTIVO: Analizza la 'weatherConditionTable' e la 'staticEventsTable' per creare un itinerario di attività personalizzato.
+OBIETTIVO: Analizza la 'staticEventsTable' per creare un set di attività compatibili con le diverse condizioni meteorologiche.
 
 DATI DI INPUT:
-- Tabella Meteo: {weatherConditionTable} (usa tutte le colonne come guida, in particolare 'Indicazione' e 'Punteggio').
 - Eventi Statici: {staticEventsTable} (usa questi come base obbligatoria per i suggerimenti).
 - Città: {city} (contestualizza ogni suggerimento con riferimenti locali autentici).
-- Data di inizio {startDate} e Data di fine {endDate} da rispettare fedelissimamente (considera la stagione e gli eventi locali).
+- Motivazione più comune per ogni indicazione meteorologica: {{mostCommonMotivation}} (usa queste motivazioni per arricchire la descrizione dei suggerimenti).
 
 PROCESSO DI RAGIONAMENTO (segui questi step nell'ordine):
-1. Per ogni giorno e parte della giornata, analizza il meteo dalla 'weatherConditionTable' e determina se le condizioni sono adatte a stare dentro o fuori. Usa la variabile 'IsIndoor' della 'staticEventsTable' per filtrare le attività di conseguenza.
-2. Filtra la 'staticEventsTable' usando 'Category', 'EnergyLevel' e 'SocialLevel' per garantire varietà sia all'interno della stessa giornata che tra giorni diversi, evitando ripetizioni.
+1. Per ognuno dei tre scenari presenti nella struttura del formato da rispettare e parte della giornata, seleziona le attività più adatte. Usa la variabile 'IsIndoor' della 'staticEventsTable' per filtrare le attività di conseguenza.
+2. Filtra la 'staticEventsTable' usando 'Category', 'EnergyLevel' e 'SocialLevel' per garantire varietà, evitando ripetizioni.
 3. Filtra la 'staticEventsTable' usando 'Duration' per costruire un programma realistico e fluido all'interno di ogni parte della giornata.
 4. Con il set di attività così costruito, elabora un programma definitivo tenendo conto di:
    - Fluidità tra parti della giornata contigue dello stesso giorno.
-   - Giorno della settimana: nei giorni feriali proponi massimo 1-2 attività per parte della giornata, nel weekend puoi essere più ricco. Ma includi SEMPRE tutti i giorni presenti nella {weatherConditionTable}, senza saltarne nessuno.
    - Coerenza con la parte della giornata: sera = atmosfere intime, giorno = attività dinamiche.
    - Stagione corrente: proponi attività stagionalmente coerenti (pattinaggio in inverno, mare in estate, etc...).
-   - Grandi eventi o festività (Pasqua, Natale, Carnevale, Ferragosto, etc...) per esperienze uniche e contestualizzate.
 5. Trasforma i nomi delle attività selezionate in posti reali che esistano nella città, usando la tua conoscenza. Non inventare mai nomi di luoghi. Se non conosci un posto reale adatto per uno slot, scrivilo esplicitamente invece di inventare.
-6. Considera la distanza tra i luoghi che suggerisci nella stessa giornata, se a te nota, per costruire un itinerario logisticamente sensato.
-7. Garantisci che il programma complessivo sia bilanciato, vario e interessante: non proporre mai lo stesso posto più di una volta nell'arco dell'intero programma. 
+6. Garantisci che il programma complessivo sia bilanciato, vario e interessante. Ogni luogo/posto reale deve apparire esattamente UNA sola volta nell'intero programma (inclusi tutti e tre gli scenari e tutti i periodi della giornata). Mantieni un registro visuale mentre costruisci il programma. Se uno slot non ha un'alternativa disponibile, dichiaralo esplicitamente nella risposta piuttosto che ripetere un posto già usato.
+7. Cerca di inserire sempre un luogo effettivo senza restare generico, a meno che non sia strettamente necessario. Se proprio non riesci a trovare un luogo reale adatto per uno slot, dichiaralo esplicitamente invece di restare generico.
+8. Non inserire indirizzi di luoghi!
+9. Per ogni luogo indica il costo atteso (variabile 'Cost') e la durata attesa (variabile 'Duration'). Fallo con i dati che vengono dalla tabella degli Eventi Statici, trasformandoli in italiano.
+10. Prima di concludere, rilleggi l'intero programma e verifica che nessun luogo compaia più di una volta. Se trovi duplicati, sostituiscili immediatamente con alternative dalla staticEventsTable che rispettino gli altri criteri. Valuta anche se è coerente nel suo complesso e miglioralo se necessario.
+11. Quindi, mostra il risultato finale.
 
 FORMATO DI RISPOSTA:
-- Comincia con il titolo in grassetto "Consigli del Concierge per i giorni dal {startDate} al {endDate} a {city}"
-- Poi questo è il formato da rispettare: {outputStructureMarkdown}
-- Popolalo ripetendolo esattamente identico per tutti i giorni che vedi dalla tabella, sostituendo "Giorno n" e "dd/mm/yyyy" con i dati corretti, e inserendo le attività suggerite per ogni slot: non saltare nessun giorno e non cambiare il formato da un giorno all'altro, deve essere tutto identico!
+- Comincia con la frase "#### **Consigli del Concierge per le diverse tipologie di scenario a {city}**" scritta in header grassettato.
+- Poi questo è il formato da rispettare, rigorosamente in markdown: {outputStructureMarkdown}
+- Popolalo, sostituendo ai vari "xxx" i dati corretti, ma rispettando scrupolosamente la struttura, senza aggiungere o togliere nulla.
 - Scrivi tutto in italiano, senza inglesismi a meno che non siano nomi propri di persone, posti o brand.
 - Arrotonda qualsiasi numero a due cifre decimali e usa unità di misura appropriate (es: km, minuti, euro) quando possibile.
-- Per ogni attività indica il costo atteso (variabile 'Cost') e la durata attesa (variabile 'Duration').
+- Ogni attivita deve restare in un solo punto elenco su una sola riga, nel formato "Nome luogo: descrizione continua". Non andare mai a capo dopo i due punti e non creare sottopunti o righe aggiuntive per la stessa attivita.
 - Concludi ogni slot con una curiosità, un aneddoto, un angolo segreto per una foto o un insider tip.
 - Non ripetere queste istruzioni nella risposta. Non aggiungere titoli introduttivi. Parti direttamente con il programma.
 """

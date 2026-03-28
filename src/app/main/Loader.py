@@ -34,7 +34,7 @@ def HideRunningIndicatorCss():
     </style>"""
 
 # Loader
-def RenderLoader(doneEvent: threading.Event, stepSeconds = 3):
+def RenderLoader(doneEvent: threading.Event, stepSeconds = 4):
     st.markdown(HideRunningIndicatorCss(), unsafe_allow_html=True)
     random.shuffle(Configuration.LoadingMessages)
     

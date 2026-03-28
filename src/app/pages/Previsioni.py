@@ -1,10 +1,14 @@
 # Environment Setting
+import html
 from httpx import stream
+import markdown
 import numpy as np
 from openai import OpenAI
 import pandas as pd
 import plotly.graph_objects as go
+import re
 import streamlit as st
+import time
 
 import configuration.ConfigurationStreamlit as Configuration
 
@@ -93,6 +97,7 @@ def PageStylesCss(animate=True):
 
         .llm-title {{color: {Configuration.PrimaryColor} !important; font-weight: {Configuration.FontWeight4} !important; font-size: {Configuration.FontSize5} !important; font-family: {Configuration.FontFamily} !important; letter-spacing: {Configuration.LetterSpacing2} !important; opacity: {Configuration.Opacity2} !important; line-height: {Configuration.LineHeight5} !important; margin-bottom: {Configuration.Spacing1} !important;}}
         .llm-subtitle {{color: {Configuration.PrimaryColor} !important; font-weight: {Configuration.FontWeight1} !important; font-size: {Configuration.FontSize3} !important; font-family: {Configuration.FontFamily} !important; opacity: {Configuration.Opacity0} !important; line-height: {Configuration.LineHeight2} !important; margin-bottom: {Configuration.Spacing2} !important;}}
+        .llm-disclaimer {{color: {Configuration.PrimaryColor} !important; font-weight: {Configuration.FontWeight1} !important; font-size: {Configuration.FontSize1} !important; font-family: {Configuration.FontFamily} !important; opacity: {Configuration.Opacity1} !important; line-height: {Configuration.LineHeight3} !important; margin-top: {Configuration.Spacing1} !important;}}
     </style>"""
 
 def ParameterFilterCss():
@@ -153,6 +158,24 @@ def ConciergeCSS():
     .concierge-container {{height: {Configuration.HeightGraph}px !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 14px 16px !important; background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(10px) !important; border-radius: {Configuration.Spacing3} !important; border: {Configuration.WidthBorder}px solid rgba(0, 111, 96, 0) !important; margin-top: {Configuration.Spacing1} !important; box-sizing: border-box !important;}}
     .concierge-container,
     .concierge-container * {{color: {Configuration.PrimaryColor} !important; font-family: {Configuration.FontFamily} !important; font-size: {Configuration.FontSize2} !important; line-height: {Configuration.LineHeight3} !important;}}
+    .concierge-container p {{margin: 0 0 0.55rem 0 !important;}}
+    .concierge-container ul,
+    .concierge-container ol {{margin: 0 0 0.55rem 0 !important; padding-left: 1.35rem !important;}}
+    .concierge-container li {{margin: 0.18rem 0 !important; padding-left: 0.15rem !important;}}
+    .concierge-container ul {{list-style-type: disc !important;}}
+    .concierge-container ol {{list-style-type: decimal !important;}}
+    .concierge-container ul ul,
+    .concierge-container ul ol,
+    .concierge-container ol ul,
+    .concierge-container ol ol {{margin-top: 0.2rem !important; margin-bottom: 0.35rem !important; padding-left: 1.25rem !important;}}
+    .concierge-container ul ul {{list-style-type: circle !important;}}
+    .concierge-container ul ul ul {{list-style-type: square !important;}}
+    .concierge-container h1,
+    .concierge-container h2,
+    .concierge-container h3,
+    .concierge-container h4,
+    .concierge-container h5,
+    .concierge-container h6 {{margin: 0 0 0.45rem 0 !important; line-height: {Configuration.LineHeight2} !important;}}
     .concierge-container::-webkit-scrollbar       {{ width: {Configuration.Spacing0B}; }}
     .concierge-container::-webkit-scrollbar-thumb {{ background: rgba(0,0,0,0.12); border-radius: {Configuration.Spacing1}; }}
 
@@ -183,6 +206,79 @@ def ConciergeCSS():
     /* ── Empty slot wrapper ── */
     div[data-testid="stEmpty"] > div {{border-radius: {Configuration.Spacing3} !important; overflow: hidden !important;}}
     </style>""", unsafe_allow_html=True)
+
+def RenderConciergeMarkdownContainer(text):
+    normalizedText = (text or '').replace('\r\n', '\n').replace('\r', '\n')
+    normalizedText = re.sub(r'(?<=\S)\s+(?=[*+]\s)', '\n', normalizedText)
+    normalizedText = re.sub(r'(?<=\S)\s+(?=\d+\.\s)', '\n', normalizedText)
+    normalizedText = re.sub(r'(^|\n)([*+-])(?=\S)', r'\1\2 ', normalizedText)
+
+    dayPartLabels = {'Mattina', 'Pranzo', 'Pomeriggio', 'Cena', 'Sera', 'Notte', 'Sera/Notte'}
+    structuredLines = []
+    insideDayPartSection = False
+    lastNestedBulletIndex = None
+    for rawLine in normalizedText.split('\n'):
+        line = rawLine.rstrip()
+        strippedLine = line.strip()
+        bulletMatch = re.match(r'^(?:[*+-]|\d+\.)\s+(.*)$', strippedLine)
+
+        if bulletMatch:
+            itemText = bulletMatch.group(1).strip()
+            itemLabel = itemText.rstrip(':').strip()
+            if itemLabel in dayPartLabels:
+                suffix = ':' if itemText.endswith(':') else ''
+                structuredLines.append(f'* **{itemLabel}**{suffix}')
+                insideDayPartSection = True
+                lastNestedBulletIndex = None
+            elif insideDayPartSection:
+                structuredLines.append(f'    * {itemText}')
+                lastNestedBulletIndex = len(structuredLines) - 1
+            else:
+                structuredLines.append(strippedLine)
+                lastNestedBulletIndex = None
+            continue
+
+        if strippedLine and insideDayPartSection and lastNestedBulletIndex is not None and not strippedLine.startswith(('#', '_')):
+            structuredLines[lastNestedBulletIndex] = f"{structuredLines[lastNestedBulletIndex]} {strippedLine}"
+            continue
+
+        structuredLines.append(line)
+        if not strippedLine:
+            lastNestedBulletIndex = None
+        elif strippedLine.startswith(('#', '_')):
+            lastNestedBulletIndex = None
+        else:
+            insideDayPartSection = False
+            lastNestedBulletIndex = None
+
+    normalizedText = '\n'.join(structuredLines)
+
+    normalizedLines = []
+    previousMeaningfulLine = ''
+    for rawLine in normalizedText.split('\n'):
+        line = rawLine.rstrip()
+        strippedLine = line.strip()
+        isBlank = strippedLine == ''
+        isHeading = strippedLine.startswith('#')
+        isListItem = bool(re.match(r'^(?:[*+-]\s|\d+\.\s)', strippedLine))
+
+        if isHeading and normalizedLines and normalizedLines[-1] != '': normalizedLines.append('')
+
+        if isListItem and previousMeaningfulLine and not re.match(r'^(?:[*+-]\s|\d+\.\s|#)', previousMeaningfulLine):
+            if normalizedLines and normalizedLines[-1] != '': normalizedLines.append('')
+
+        if not isListItem and previousMeaningfulLine and re.match(r'^(?:[*+-]\s|\d+\.\s)', previousMeaningfulLine) and not isBlank:
+            if normalizedLines and normalizedLines[-1] != '': normalizedLines.append('')
+
+        normalizedLines.append(line)
+
+        if not isBlank: previousMeaningfulLine = strippedLine
+
+    normalizedText = '\n'.join(normalizedLines)
+
+    safeText     = html.escape(normalizedText)
+    renderedHtml = markdown.markdown(safeText, extensions=['extra', 'sane_lists'])
+    return f'<div class="concierge-container">{renderedHtml}</div>'
 
 # Title
 def RenderTitle():
@@ -492,18 +588,69 @@ def RenderForecastTable(df, animate=True):
     st.markdown(f"<div class='scrollable-table-container forecast-enter-item {animationClass}'>{tableHtml}</div>", unsafe_allow_html=True)
 
 # LLM
-def GenerateLLMComment(startDate, endDate, cityName, staticEventsTable, weatherConditionTable,
-                       orApiKey=Configuration.OpenRouterKey, model=Configuration.ModelK, 
+def BuildLlmModelSequence(defaultModel, fallbackModels):
+    cachedModel   = st.session_state.get('_llm_last_successful_model')
+    modelSequence = [cachedModel, defaultModel, *(fallbackModels or [])]
+
+    uniqueModels = []
+    for currentModel in modelSequence:
+        if currentModel and currentModel not in uniqueModels: uniqueModels.append(currentModel)
+
+    return uniqueModels
+
+def IsRetryableLlmError(error):
+    errorText = str(error).lower()
+    return any(token in errorText for token in ['429', 'rate limit', 'rate-limit', 'rate_limited', 'temporarily rate-limited', 'temporarily rate limited', 'too many requests', 'connection error', 'timed out', 'timeout'])
+
+def BuildFriendlyLlmError(error):
+    if IsRetryableLlmError(error): return '⚠️ Il provider AI è temporaneamente occupato. Riprova tra qualche secondo.'
+    return f'⚠️ Errore nella generazione dei consigli: {str(error)}'
+
+def GenerateLLMComment(cityName, staticEventsTable, summaryTable,
+                       orApiKey=Configuration.OpenRouterKey, model=Configuration.ModelF, 
+                       fallbackModels=Configuration.LlmFallbackModels, maxRetries=Configuration.LlmMaxRetries, retryDelaySeconds=Configuration.LlmRetryDelaySeconds,
                        systemPrompt=Configuration.LLMPrompt, maxTokens=Configuration.MaxTokens, temperature=Configuration.Temperature, topP=Configuration.TopP):   
     try:        
-        filledPrompt = systemPrompt.format(startDate = startDate, endDate = endDate, city = cityName, weatherConditionTable = weatherConditionTable, staticEventsTable = staticEventsTable, outputStructureMarkdown = Configuration.LLMResponseStructure)
+        mostCommonMotivation   = summaryTable.groupby('Indicazione')['Motivo Principale'].agg(lambda x: x.mode().iloc[0] if not x.mode().empty else 'Condizioni variabili')
+        motivationByIndication = {indication: mostCommonMotivation.get(indication, 'Condizioni variabili') for indication in summaryTable['Indicazione'].unique()}
+        
+        filledPrompt = systemPrompt.format(city = cityName, staticEventsTable = staticEventsTable, mostCommonMotivation = motivationByIndication, outputStructureMarkdown = Configuration.LLMResponseStructure)
         client       = OpenAI(base_url='https://openrouter.ai/api/v1', api_key=orApiKey)
-        stream       = client.chat.completions.create(model = model, max_tokens=maxTokens, temperature = temperature, top_p = topP, stream = True, messages = [{'role': 'user', 'content': filledPrompt}])
-        for chunk in stream:
-            delta = chunk.choices[0].delta.content
-            if delta: yield delta
+        lastError    = None
 
-    except Exception as e: yield f'⚠️ Errore nella generazione dei consigli: {str(e)}'
+        for currentModel in BuildLlmModelSequence(model, fallbackModels):
+            for attempt in range(1, maxRetries + 1):
+                streamedAnyChunk = False
+
+                try:
+                    stream = client.chat.completions.create(model = currentModel, max_tokens=maxTokens, temperature = temperature, top_p = topP, stream = True, messages = [{'role': 'user', 'content': filledPrompt}])
+                    for chunk in stream:
+                        delta = chunk.choices[0].delta.content
+                        if delta:
+                            streamedAnyChunk = True
+                            yield delta
+
+                    st.session_state['_llm_last_successful_model'] = currentModel
+                    return
+                except Exception as currentError:
+                    lastError = currentError
+                    print(f'[LLM] Model {currentModel} failed on attempt {attempt}: {currentError}')
+
+                    if streamedAnyChunk:
+                        yield '\n\n⚠️ La risposta si è interrotta durante la generazione. Riprova tra qualche secondo.'
+                        return
+
+                    if IsRetryableLlmError(currentError) and attempt < maxRetries:
+                        time.sleep(retryDelaySeconds * attempt)
+                        continue
+
+                    break
+
+        if lastError is not None:
+            yield BuildFriendlyLlmError(lastError)
+            return
+
+    except Exception as e: yield BuildFriendlyLlmError(e)
 
 # Wrapper
 def RenderFirstPart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate):
@@ -527,9 +674,6 @@ def RenderColumnLeft(animate, summaryTable):
 def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summaryTable):
     titleClass2        = 'forecast-enter-delay-2' if animate else ''
     cityName           = city[city['Id'] == selectedFilters['cityId']]['City'].iloc[0] if selectedFilters['cityId'] else "la città"
-    startDate, endDate = selectedFilters.get('dateRange')
-    startDate          = startDate.strftime('%d-%m-%Y') if startDate else 'N/A'
-    endDate            = endDate.strftime('%d-%m-%Y') if endDate else 'N/A'
     st.markdown(f"<div class='llm-title forecast-enter-item {titleClass2}'>Consigli del Concierge</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='llm-subtitle forecast-enter-item {titleClass2}'>Idee per attività da fare nei prossimi giorni</div>", unsafe_allow_html=True)
 
@@ -543,14 +687,16 @@ def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summary
         st.session_state['_streaming_active'] = False
         fullText = ''
         with st.spinner("Il Concierge sta analizzando le possibilità per te..."):
-            for chunk in GenerateLLMComment(startDate, endDate, cityName, staticEventsTable, summaryTable.to_csv(index=False)):
+            for chunk in GenerateLLMComment(cityName, staticEventsTable, summaryTable=summaryTable):
                 fullText += chunk
-                conciergeSlot.markdown(f'<div class="concierge-container">{fullText}</div>', unsafe_allow_html=True)
+                conciergeSlot.markdown(RenderConciergeMarkdownContainer(fullText), unsafe_allow_html=True)
         st.session_state['llm_comment_cache'] = fullText
 
-    elif st.session_state.get('llm_comment_cache'): conciergeSlot.markdown(f'<div class="concierge-container">{st.session_state["llm_comment_cache"]}</div>', unsafe_allow_html=True)
+    elif st.session_state.get('llm_comment_cache'): conciergeSlot.markdown(RenderConciergeMarkdownContainer(st.session_state['llm_comment_cache']), unsafe_allow_html=True)
 
     else: conciergeSlot.markdown(f'<div class="concierge-container" style="display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.3);font-size:{Configuration.FontSize3};"><i>Clicca sul bottone per ricevere consigli personalizzati per {cityName}</i></div>', unsafe_allow_html=True)
+
+    st.markdown("<div class='llm-disclaimer'><strong>Nota</strong>: il Concierge usa un modello LLM e potrebbe fornire indicazioni non corrette. Verifica sempre le informazioni prima di decidere.</div>", unsafe_allow_html=True)
 
 def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider, staticEventsTable):
     animate = not st.session_state.get('_forecast_entered', False)

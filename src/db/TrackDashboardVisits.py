@@ -4,6 +4,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+import requests
 import streamlit as st
 from supabase import Client, create_client
 
@@ -39,12 +40,49 @@ def HashIp(ipValue):
 
     return hashlib.sha256(f'{salt}:{normalized}'.encode('utf-8')).hexdigest()
 
+def NormalizeIp(ipValue):
+    'Normalize the client IP string.'
+    if not ipValue: return None
+
+    normalized = str(ipValue).strip().lower()
+    return normalized or None
+
 def ExtractClientIp(headers):
     'Extract client IP from forwarded headers if present.'
     xForwardedFor = headers.get('x-forwarded-for')
     if xForwardedFor: return xForwardedFor.split(',')[0].strip()
 
     return headers.get('x-real-ip')
+
+def ResolveGeoMetadata(ipAddress):
+    'Resolve geographic metadata for a client IP.'
+    if not Configuration.AnalyticsResolveGeo or not ipAddress: return {}
+
+    cachedIpAddress = st.session_state.get('_client_geo_ip')
+    cachedMetadata  = st.session_state.get('_client_geo_metadata')
+    if cachedIpAddress == ipAddress and isinstance(cachedMetadata, dict): return cachedMetadata
+
+    lookupUrl = f"{Configuration.AnalyticsGeoLookupUrl.rstrip('/')}/{ipAddress}"
+
+    try:
+        response = requests.get(lookupUrl, timeout=Configuration.AnalyticsGeoLookupTimeoutSeconds)
+        response.raise_for_status()
+        payload = response.json() or {}
+
+        success = payload.get('success')
+        if success is False: return {}
+
+        metadata = {
+            'City': payload.get('city'),
+            'Region': payload.get('region') or payload.get('region_name'),
+            'Country': payload.get('country'),
+            'CountryCode': payload.get('country_code'),
+        }
+        st.session_state['_client_geo_ip'] = ipAddress
+        st.session_state['_client_geo_metadata'] = metadata
+        return metadata
+    except Exception:
+        return {}
 
 def ReadQueryParams():
     'Read query params as plain dict with safe fallback.'
@@ -62,13 +100,19 @@ def BuildBaseMetadata(appVersion='1.0.0'):
     headers     = ReadHeadersFromStreamlit()
     queryParams = ReadQueryParams()
     currentPage = ResolveCurrentPage(queryParams=queryParams)
-    clientIp    = ExtractClientIp(headers)
+    clientIp    = NormalizeIp(ExtractClientIp(headers))
+    geoMetadata = ResolveGeoMetadata(clientIp)
 
     return {'AppVersion': appVersion,
         'Page': str(currentPage),
         'UserAgent': headers.get('user-agent'),
         'Referrer': headers.get('referer') or headers.get('referrer'),
+        'IpAddress': clientIp if Configuration.AnalyticsStoreRawIp else None,
         'IpHash': HashIp(clientIp),
+        'City': geoMetadata.get('City'),
+        'Region': geoMetadata.get('Region'),
+        'Country': geoMetadata.get('Country'),
+        'CountryCode': geoMetadata.get('CountryCode'),
         'QueryParams': queryParams,
         'HeadersSample': {
             'accept_language': headers.get('accept-language'),
@@ -107,7 +151,12 @@ def BuildEventRow(eventType, page, payload, appVersion):
         'AppVersion': base.get('AppVersion'),
         'UserAgent': base.get('UserAgent'),
         'Referrer': base.get('Referrer'),
+        'IpAddress': base.get('IpAddress'),
         'IpHash': base.get('IpHash'),
+        'City': base.get('City'),
+        'Region': base.get('Region'),
+        'Country': base.get('Country'),
+        'CountryCode': base.get('CountryCode'),
         'QueryParams': base.get('QueryParams') or {},
         'HeadersSample': base.get('HeadersSample') or {},
         'Payload': payload or {},
@@ -131,7 +180,12 @@ def WriteEventToSupabase(eventType, page=None, payload=None, appVersion='1.0.0',
                 'AppVersion': row['AppVersion'],
                 'UserAgent': row['UserAgent'],
                 'Referrer': row['Referrer'],
+                'IpAddress': row['IpAddress'],
                 'IpHash': row['IpHash'],
+                'City': row['City'],
+                'Region': row['Region'],
+                'Country': row['Country'],
+                'CountryCode': row['CountryCode'],
                 'QueryParams': row['QueryParams'],
                 'HeadersSample': row['HeadersSample'],
                 'Payload': row['Payload'],
