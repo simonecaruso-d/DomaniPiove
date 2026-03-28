@@ -2,6 +2,9 @@
 from dotenv import load_dotenv
 import os 
 
+# Conversions
+DbSafeMetricNameMap = {'PrecipitationProbability': 'PrecipitationProb'}
+
 # API Calls
 MaxRetries            = 4
 BaseRetryDelaySeconds = 0.7
@@ -16,9 +19,10 @@ SupabaseKey      = os.getenv("SUPABASE_KEY")
 SupabasePageSize = 1000
 WriteBatchSize   = 500
 
-AnalyticsStoreRawIp      = os.getenv('ANALYTICS_STORE_RAW_IP', 'false').strip().lower() in ('1', 'true', 'yes', 'on')
-AnalyticsResolveGeo      = os.getenv('ANALYTICS_RESOLVE_GEO', 'false').strip().lower() in ('1', 'true', 'yes', 'on')
-AnalyticsGeoLookupUrl    = os.getenv('ANALYTICS_GEO_LOOKUP_URL', 'https://ipwho.is/')
+# Visits Tracking
+AnalyticsStoreRawIp              = os.getenv('ANALYTICS_STORE_RAW_IP', 'false').strip().lower() in ('1', 'true', 'yes', 'on')
+AnalyticsResolveGeo              = os.getenv('ANALYTICS_RESOLVE_GEO', 'false').strip().lower() in ('1', 'true', 'yes', 'on')
+AnalyticsGeoLookupUrl            = os.getenv('ANALYTICS_GEO_LOOKUP_URL', 'https://ipwho.is/')
 AnalyticsGeoLookupTimeoutSeconds = float(os.getenv('ANALYTICS_GEO_LOOKUP_TIMEOUT_SECONDS', '2.5'))
 
 # Retrieve Data

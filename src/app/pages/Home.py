@@ -119,10 +119,10 @@ def LoadSlideshowData(imagesDirectory=str(Configuration.ImagesHistoryDirectory))
 
     for imagePath in sorted(imagesDirectory.iterdir()):
         with open(imagePath, 'rb') as imageFile: imageB64 = base64.b64encode(imageFile.read()).decode()
-        slideshowData.append({'stem'        : imagePath.stem,
-                              'display_name': imagePath.stem.replace('_', ' ').title(),
-                              'caption'     : GetImageCaption(imagePath.stem),
-                              'base64'      : imageB64})
+        slideshowData.append({'stem'           : imagePath.stem,
+                              'display_name'   : imagePath.stem.replace('_', ' ').title(),
+                              'caption'        : GetImageCaption(imagePath.stem),
+                              'base64'         : imageB64})
     return slideshowData
 
 def PreviousSlide(totalImages):
@@ -169,18 +169,26 @@ def RenderMap(cities, animate=True):
 
 # Wrapper
 def RenderHomeContent(cities):
-    animate = not st.session_state.get('_home_entered', False)
+    animate                           = not st.session_state.get('_home_entered', False)
     st.session_state['_home_entered'] = True
     RenderPageStyles(animate=animate)
+
+    viewportWidth = Configuration.ResponsiveViewportWidth
+    if viewportWidth <= 1300  : leftSectionGap = f"{Configuration.ScalePx(65)}px"
+    elif viewportWidth <= 1380: leftSectionGap = f"{Configuration.ScalePx(120)}px"
+    else                      : leftSectionGap = Configuration.Spacing6B
+    if viewportWidth <= 1300  : rightSectionGap = f"{Configuration.ScalePx(165)}px"
+    elif viewportWidth <= 1380: rightSectionGap = f"{Configuration.ScalePx(105)}px"
+    else                      : rightSectionGap = Configuration.Spacing3
 
     colLeft, colRight = st.columns([1.2, 1])
 
     with colLeft:
         RenderWhoWeAre()
-        st.markdown(f'<div style="height: {Configuration.Spacing6B};"></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="height: {leftSectionGap};"></div>', unsafe_allow_html=True)
         RenderSlideshowWithFragment()
 
     with colRight:
         RenderHowItWorks()
-        st.markdown(f'<div style="height: {Configuration.Spacing3};"></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="height: {rightSectionGap};"></div>', unsafe_allow_html=True)
         RenderMap(cities, animate=animate)

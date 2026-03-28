@@ -21,6 +21,18 @@ PageTitle           = 'Domani Piove?'
 PageIcon            = '🌦️'
 Layout              = 'wide'
 InitialSidebarState = 'collapsed'
+AppVersion          = '1.0.0'
+
+# Responsive System
+ResponsiveBaseWidth  = 1440
+ResponsiveMinScale   = 0.78
+ResponsiveMaxScale   = 1.03
+ResponsiveStepPx     = 40
+ResponsiveFallbackVw = 1360
+
+ResponsiveViewportWidth  = ResponsiveFallbackVw
+ResponsiveViewportHeight = 900
+ResponsiveScale          = 1.0
 
 # Pages & Icons
 Pages           = ['Home', 'Previsioni', 'Accuratezza']
@@ -50,6 +62,20 @@ Palette2ByProvider = ['#886676', '#6b5c73', '#4b5269', '#2f4858']
 # Fonts & Typography
 FontFamily = "'Inter', sans-serif"
 
+_BaseFontSize1  = 0.75
+_BaseFontSize2  = 0.8
+_BaseFontSize3  = 0.85
+_BaseFontSize4  = 0.9
+_BaseFontSize5  = 0.95
+_BaseFontSize6  = 1.0
+_BaseFontSize7  = 1.05
+_BaseFontSize8  = 1.1
+_BaseFontSize9  = 1.15
+_BaseFontSize10 = 1.2
+_BaseFontSize11 = 1.25
+_BaseFontSizeAA = 8
+_BaseFontSizeA  = 10
+
 FontSize1  = '0.75rem'
 FontSize2  = '0.8rem'
 FontSize3  = '0.85rem'
@@ -75,14 +101,29 @@ LineHeight3 = '1.3'
 LineHeight4 = '1.4'
 LineHeight5 = '1.5'
 
-LetterSpacing1 = '0.2px'
-LetterSpacing2 = '0.3px'
+_BaseLetterSpacing1 = 0.2
+_BaseLetterSpacing2 = 0.3
+LetterSpacing1      = '0.2px'
+LetterSpacing2      = '0.3px'
 
 Opacity0 = '0.5'
 Opacity1 = '0.75'
 Opacity2 = '0.85'
 
 # Spacing & Heights
+_BaseSpacing0B = 5
+_BaseSpacing1  = 10
+_BaseSpacing1B = 15
+_BaseSpacing2  = 20
+_BaseSpacing3  = 30
+_BaseSpacing4  = 40
+_BaseSpacing5  = 50
+_BaseSpacing6  = 60
+_BaseSpacing6B = 65
+
+_BaseSpacingA1 = 6
+_BaseSpacingA2 = 12
+
 Spacing0B = '5px'
 Spacing1  = '10px'
 Spacing1B = '15px'
@@ -92,16 +133,25 @@ Spacing4  = '40px'
 Spacing5  = '50px'
 Spacing6  = '60px'
 Spacing6B = '65px'
-
 SpacingA  = '6px 12px'
 
-HeightGraph             = 450
-HeightMap               = 350
-HeightSlideshowControl  = 20
-HeightWhoWeAre          = 300
-HeightSlideshow         = 250
+_BaseHeightGraph            = 450
+_BaseHeightMap              = 350
+_BaseHeightSlideshowControl = 20
+_BaseHeightWhoWeAre         = 300
+_BaseHeightSlideshow        = 250
+
+HeightGraph            = 450
+HeightMap              = 350
+HeightSlideshowControl = 20
+HeightWhoWeAre         = 300
+HeightSlideshow        = 250
 
 # Borders & Shadows
+_BaseBorder1 = 15
+_BaseBorder2 = 25
+_BaseBorder3 = 50
+
 Border1 = '15px'
 Border2 = '25px'
 Border3 = '50px'
@@ -110,9 +160,11 @@ BoxShadowMarker    = '0 2px 8px rgba(66, 103, 118, 0.30)'
 
 # Liquid Layout
 RadiusButton = 1000
-RadiusInput  = 15
-RadiusCard   = 25
-WidthBorder  = 1
+_BaseRadiusInput = 15
+_BaseRadiusCard  = 25
+RadiusInput      = 15
+RadiusCard       = 25
+WidthBorder      = 1
 
 # Animation
 AnimationDuration       = '1400ms'
@@ -122,20 +174,124 @@ AnimationDelay2         = '0s'
 AnimationDelay3         = '0s'
 
 # Specific Assets - Title
-TitleTopPx              = '80px'
-TitleLeftExpandedPx     = '270px'
-TitleLeftCollapsedPx    = '100px'
-TitleZIndex             = '999997'
+_BaseTitleTopPx           = 80
+_BaseTitleLeftExpandedPx  = 270
+_BaseTitleLeftCollapsedPx = 100
+
+TitleTopPx           = '80px'
+TitleLeftExpandedPx  = '270px'
+TitleLeftCollapsedPx = '100px'
+TitleZIndex          = '999997'
+
+
+def _clamp(value, minimum, maximum):
+    return max(minimum, min(value, maximum))
+
+def _round_step(value, step):
+    if step <= 0: return int(value)
+    return int(round(value / step) * step)
+
+def _extract_query_value(queryParams, key, defaultValue):
+    if queryParams is None: return defaultValue
+
+    rawValue = queryParams.get(key, defaultValue)
+    if isinstance(rawValue, list): rawValue = rawValue[0] if rawValue else defaultValue
+
+    try: return int(float(rawValue))
+    except Exception: return defaultValue
+
+def _format_rem(value):
+    return f'{value:.3f}'.rstrip('0').rstrip('.') + 'rem'
+
+def _format_px(value):
+    return f'{int(round(value))}px'
+
+def _scale_int(value, scale, minimum=1):
+    return max(minimum, int(round(value * scale)))
+
+def _scale_css_px(value, scale, minimum=1):
+    return _format_px(_scale_int(value, scale, minimum=minimum))
+
+def _scale_css_rem(value, scale):
+    return _format_rem(value * scale)
+
+def _scale_css_pair_px(firstValue, secondValue, scale):
+    return f'{_scale_css_px(firstValue, scale)} {_scale_css_px(secondValue, scale)}'
+
+def GetResponsiveScale(queryParams=None):
+    viewportWidth = _extract_query_value(queryParams, 'vw', ResponsiveFallbackVw)
+    viewportWidth = _round_step(viewportWidth, ResponsiveStepPx)
+    computedScale = viewportWidth / ResponsiveBaseWidth
+    return _clamp(computedScale, ResponsiveMinScale, ResponsiveMaxScale), viewportWidth
+
+def ScalePx(value, scale=None, minimum=1):
+    currentScale = ResponsiveScale if scale is None else scale
+    return _scale_int(value, currentScale, minimum=minimum)
+
+def ApplyResponsiveScale(queryParams=None):
+    global ResponsiveScale, ResponsiveViewportWidth, ResponsiveViewportHeight
+    global FontSize1, FontSize2, FontSize3, FontSize4, FontSize5, FontSize6, FontSize7, FontSize8, FontSize9, FontSize10, FontSize11, FontSizeAA, FontSizeA
+    global LetterSpacing1, LetterSpacing2
+    global Spacing0B, Spacing1, Spacing1B, Spacing2, Spacing3, Spacing4, Spacing5, Spacing6, Spacing6B, SpacingA
+    global HeightGraph, HeightMap, HeightSlideshowControl, HeightWhoWeAre, HeightSlideshow
+    global Border1, Border2, Border3
+    global RadiusInput, RadiusCard
+    global TitleTopPx, TitleLeftExpandedPx, TitleLeftCollapsedPx
+
+    ResponsiveScale, ResponsiveViewportWidth = GetResponsiveScale(queryParams)
+    ResponsiveViewportHeight                 = _extract_query_value(queryParams, 'vh', ResponsiveViewportHeight)
+
+    scale = ResponsiveScale
+
+    FontSize1  = _scale_css_rem(_BaseFontSize1, scale)
+    FontSize2  = _scale_css_rem(_BaseFontSize2, scale)
+    FontSize3  = _scale_css_rem(_BaseFontSize3, scale)
+    FontSize4  = _scale_css_rem(_BaseFontSize4, scale)
+    FontSize5  = _scale_css_rem(_BaseFontSize5, scale)
+    FontSize6  = _scale_css_rem(_BaseFontSize6, scale)
+    FontSize7  = _scale_css_rem(_BaseFontSize7, scale)
+    FontSize8  = _scale_css_rem(_BaseFontSize8, scale)
+    FontSize9  = _scale_css_rem(_BaseFontSize9, scale)
+    FontSize10 = _scale_css_rem(_BaseFontSize10, scale)
+    FontSize11 = _scale_css_rem(_BaseFontSize11, scale)
+    FontSizeAA = _scale_css_px(_BaseFontSizeAA, scale)
+    FontSizeA  = _scale_css_px(_BaseFontSizeA, scale)
+
+    LetterSpacing1 = _scale_css_px(_BaseLetterSpacing1, scale, minimum=0)
+    LetterSpacing2 = _scale_css_px(_BaseLetterSpacing2, scale, minimum=0)
+
+    Spacing0B = _scale_css_px(_BaseSpacing0B, scale)
+    Spacing1  = _scale_css_px(_BaseSpacing1, scale)
+    Spacing1B = _scale_css_px(_BaseSpacing1B, scale)
+    Spacing2  = _scale_css_px(_BaseSpacing2, scale)
+    Spacing3  = _scale_css_px(_BaseSpacing3, scale)
+    Spacing4  = _scale_css_px(_BaseSpacing4, scale)
+    Spacing5  = _scale_css_px(_BaseSpacing5, scale)
+    Spacing6  = _scale_css_px(_BaseSpacing6, scale)
+    Spacing6B = _scale_css_px(_BaseSpacing6B, scale)
+    SpacingA  = _scale_css_pair_px(_BaseSpacingA1, _BaseSpacingA2, scale)
+
+    HeightGraph            = _scale_int(_BaseHeightGraph, scale, minimum=240)
+    HeightMap              = _scale_int(_BaseHeightMap, scale, minimum=220)
+    HeightSlideshowControl = _scale_int(_BaseHeightSlideshowControl, scale, minimum=14)
+    HeightWhoWeAre         = _scale_int(_BaseHeightWhoWeAre, scale, minimum=200)
+    HeightSlideshow        = _scale_int(_BaseHeightSlideshow, scale, minimum=170)
+
+    Border1 = _scale_css_px(_BaseBorder1, scale)
+    Border2 = _scale_css_px(_BaseBorder2, scale)
+    Border3 = _scale_css_px(_BaseBorder3, scale)
+
+    RadiusInput = _scale_int(_BaseRadiusInput, scale, minimum=8)
+    RadiusCard  = _scale_int(_BaseRadiusCard, scale, minimum=12)
+
+    TitleTopPx           = _scale_css_px(_BaseTitleTopPx, scale)
+    TitleLeftExpandedPx  = _scale_css_px(_BaseTitleLeftExpandedPx, scale)
+    TitleLeftCollapsedPx = _scale_css_px(_BaseTitleLeftCollapsedPx, scale)
+
+ApplyResponsiveScale()
 
 # Specific Assets - Accuracy 
-MaeThresholdsByParameter = {'Temperatura':                (2, 5),
-                            'Temperatura percepita':      (2, 5),
-                            'Nuvole':                     (15, 35),
-                            'Probabilità precipitazioni': (15, 35),
-                            'Pioggia':                    (1, 3),
-                            'Neve':                       (1, 3),
-                            'Vento':                      (5, 12),
-                            'Umidità':                    (15, 35)}
+MaeThresholdsByParameter = {'Temperatura': (2, 5), 'Temperatura percepita': (2, 5), 'Nuvole': (15, 35), 'Probabilità precipitazioni': (15, 35), 'Pioggia': (1, 3), 'Neve': (1, 3), 'Vento': (5, 12), 'Umidità': (15, 35)}
 
 # Specific Assets - Measures
 Parameters             = ['Temperatura', 'Temperatura percepita', 'Nuvole', 'Probabilità precipitazioni', 'Pioggia', 'Neve', 'Vento', 'Umidità']

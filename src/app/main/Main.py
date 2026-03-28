@@ -1,9 +1,9 @@
 # Environment Setting
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import streamlit as st
-import threading
 import sys
-from concurrent.futures import ThreadPoolExecutor
+import threading
 
 SourceDirectory = Path(__file__).resolve().parents[2]
 if str(SourceDirectory) not in sys.path: sys.path.insert(0, str(SourceDirectory))
@@ -13,16 +13,16 @@ import app.ui.Layout                        as HomeUI
 import app.pages.Home                       as HomeElements
 import app.pages.Accuratezza                as AccuracyElements
 import app.pages.Previsioni                 as ForecastElements
+import configuration.ConfigurationStreamlit as Configuration
 import db.ReadFromSupabase                  as SupabaseReader
 import db.TrackDashboardVisits              as VisitTracker
 
-# Helpers
+# Data Loading
 def RunLoad(resultHolder, doneEvent):
     try: resultHolder['data'] = LoadData()
     except Exception as e: resultHolder['error'] = e
     finally: doneEvent.set()
 
-# Data Loading
 @st.cache_data(ttl=1800)
 def LoadData():
     'Load city and forecasts data from Supabase.'
@@ -77,6 +77,7 @@ def RenderForecastPage(city, calendar, forecasts, forecastAccuracyByProvider, st
 def Main():
     'Run the Home page entrypoint workflow.'
     HomeUI.SetupPage()
+    Configuration.ApplyResponsiveScale(st.query_params)
     VisitTracker.EnsureVisitStarted()
     st.markdown(Loader.HideRunningIndicatorCss(), unsafe_allow_html=True)
 

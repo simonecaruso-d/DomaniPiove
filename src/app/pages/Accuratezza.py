@@ -8,7 +8,8 @@ import configuration.ConfigurationStreamlit as Configuration
  
 # HTML Templates 
 def BestProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
-    return (f'<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{Configuration.Spacing1};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
+    textGap = Configuration.Spacing0B if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing1
+    return (f'<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
             f'A {html.escape(label.lower())} di distanza, '
             f'<span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> '
             f'è il più affidabile con un errore medio di '
@@ -16,7 +17,8 @@ def BestProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
             f'</div>')
 
 def WorstProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
-    return (f'<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{Configuration.Spacing1};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
+    textGap = Configuration.Spacing0B if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing1
+    return (f'<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
             f'A {html.escape(label.lower())} di distanza, '
             f'<span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> '
             f'è il meno affidabile con un errore medio di '
@@ -24,8 +26,9 @@ def WorstProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
             f'</div>')
 
 def SectionHeaderHtml(text, animationClass=''):
+    sectionBottomGap = Configuration.Spacing1 if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing2
     return (f'<div class="accuracy-enter-item {animationClass}" style="font-size:{Configuration.FontSize6};font-weight:{Configuration.FontWeight2};color:{Configuration.Palette2Dark};'
-            f'letter-spacing:{Configuration.LetterSpacing2}; line-height:{Configuration.LineHeight5}; margin-top: 0; margin-bottom:{Configuration.Spacing2};">{text}</div>')
+            f'letter-spacing:{Configuration.LetterSpacing2}; line-height:{Configuration.LineHeight5}; margin-top: 0; margin-bottom:{sectionBottomGap};">{text}</div>')
 
 # CSS Templates
 def PageStylesCss(animate=True):
@@ -70,14 +73,14 @@ def PageStylesCss(animate=True):
 def TitleCss():
     return f"""<style>
         .accuratezza-title-fixed {{
-            position: fixed; top: 80px; left: 100px;
+            position: fixed; top: {Configuration.TitleTopPx}; left: {Configuration.TitleLeftCollapsedPx};
             margin: 0 !important; padding: 0 !important;
             color: {Configuration.PrimaryColor} !important; font-size: {Configuration.FontSize8} !important;
             line-height: {Configuration.LineHeight2} !important; font-weight: {Configuration.FontWeight4} !important;
             letter-spacing: {Configuration.LetterSpacing2} !important; font-family: {Configuration.FontFamily} !important;
             text-shadow: none !important; z-index: 999997;}}
-        body:has([data-testid="stSidebar"][aria-expanded="true"])  .accuratezza-title-fixed {{ left: 268px; }}
-        body:has([data-testid="stSidebar"][aria-expanded="false"]) .accuratezza-title-fixed {{ left: 100px; }}
+        body:has([data-testid="stSidebar"][aria-expanded="true"])  .accuratezza-title-fixed {{ left: {Configuration.TitleLeftExpandedPx}; }}
+        body:has([data-testid="stSidebar"][aria-expanded="false"]) .accuratezza-title-fixed {{ left: {Configuration.TitleLeftCollapsedPx}; }}
     </style><div class="accuratezza-title-fixed">Accuratezza</div>"""
  
 # Rendering Functions
@@ -92,8 +95,8 @@ def RenderParameterFilter(parameters=Configuration.Parameters):
 def RenderRadar(aggregatedDf, providers, daySpans, labels, parameter, animate=True):
     animationClass           = 'accuracy-enter-delay-1' if animate else ''
     N                        = len(daySpans)
-    centerX, centerY, radius = 280, 260, 190
-    width, height            = 560, 500
+    centerX, centerY, radius = Configuration.ScalePx(280), Configuration.ScalePx(260), Configuration.ScalePx(190)
+    width, height            = Configuration.ScalePx(560), Configuration.ScalePx(500)
     angles                   = [2 * math.pi * i / N - math.pi / 2 for i in range(N)]
 
     defs = (f'<defs>'
@@ -182,6 +185,10 @@ def RenderBestProviderSummary(aggregatedDf, daySpans, labels, parameter, animate
     animationClass = 'accuracy-enter-delay-2' if animate else ''
     bestLines  = []
     worstLines = []
+    
+    isTightLaptopViewport = Configuration.ResponsiveViewportWidth <= 1366
+    gapBetweenSections    = Configuration.Spacing3 if isTightLaptopViewport else Configuration.Spacing6
+    sectionBuffer         = Configuration.Spacing1 if isTightLaptopViewport else Configuration.Spacing3
 
     for ds, lbl in zip(daySpans, labels):
         subset = aggregatedDf[aggregatedDf['DaySpanNumeric'] == ds].dropna(subset=['MAE'])
@@ -193,9 +200,9 @@ def RenderBestProviderSummary(aggregatedDf, daySpans, labels, parameter, animate
     if bestLines:
         st.markdown(SectionHeaderHtml('Provider più affidabile', animationClass) + ''.join(bestLines), unsafe_allow_html=True)
     if worstLines:
-        st.markdown(f"<div style='height:{Configuration.Spacing6};'></div>", unsafe_allow_html=True)
-        st.markdown(f"<div style='height:{Configuration.Spacing6};'></div>", unsafe_allow_html=True)
-        st.markdown(f"<div style='height:{Configuration.Spacing3};'></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='height:{gapBetweenSections};'></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='height:{gapBetweenSections};'></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='height:{sectionBuffer};'></div>", unsafe_allow_html=True)
         st.markdown(SectionHeaderHtml('Provider meno affidabile', animationClass) + ''.join(worstLines), unsafe_allow_html=True)
 
 # Data Helpers
@@ -245,7 +252,7 @@ def RenderAccuracyContent(forecastAccuracyByDaySpan):
     st.session_state['_accuracy_entered'] = True
     st.markdown(PageStylesCss(animate=animate), unsafe_allow_html=True)
 
-    selectedParameter = RenderParameterFilter()
+    selectedParameter                     = RenderParameterFilter()
     st.session_state['selectedParameter'] = selectedParameter
     st.markdown(f"<div style='height:{Configuration.Spacing6};'></div>", unsafe_allow_html=True)
     st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette2Dark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)

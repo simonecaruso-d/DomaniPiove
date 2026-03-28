@@ -117,7 +117,7 @@ def ParameterFilterCss():
 def TitleCss():
     return f"""<style>
         .previsioni-title-fixed {{
-            position: fixed; top: 80px; left: 100px;
+            position: fixed; top: {Configuration.TitleTopPx}; left: {Configuration.TitleLeftCollapsedPx};
             margin: 0 !important; padding: 0 !important;
             color: {Configuration.PrimaryColor} !important; font-size: {Configuration.FontSize10} !important;
             line-height: {Configuration.LineHeight1} !important; font-weight: {Configuration.FontWeight4} !important;
@@ -442,7 +442,7 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
     aggregated            = (df.groupby('Datetime', as_index=False).apply(lambda g: pd.Series({
                             'Value': g['_weighted_value'].sum() / g['_weight'].sum() if g['_weight'].sum() > 0 else float('nan'),
                             'ProviderInfo': '<br>'.join(f"{r['Provider']} ({(r['_weight'] / g['_weight'].sum()):.0%})" for _, r in g.iterrows() if r['_weight'] > 0)}), include_groups=False)
-                    .sort_values('Datetime').reset_index(drop=True))
+                            .sort_values('Datetime').reset_index(drop=True))
 
     valueMin        = aggregated['Value'].min()
     valueMax        = aggregated['Value'].max()    
@@ -481,12 +481,12 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
     figure.update_layout(
         paper_bgcolor        = f'rgba({HexToRgb(Configuration.AccentColor)}, 0.04)',
         plot_bgcolor         = 'rgba(0,0,0,0)',
-        margin               = dict(l=64, r=16, t=16, b=16),
+        margin               = dict(l=Configuration.ScalePx(64), r=Configuration.ScalePx(16), t=Configuration.ScalePx(16), b=Configuration.ScalePx(16)),
         height               = Configuration.HeightGraph,
-        font                 = dict(family=Configuration.FontFamily, size=10, color=Configuration.Palette1VeryDark),
-        xaxis                = dict(showgrid = True, gridcolor = f'rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.03)', gridwidth = 1, zeroline = False, tickformat = '%d %b\n%H:%M', tickfont = dict(size=11, color=Configuration.Palette1VeryDark), showline = False, ticks = ''),
-        yaxis                = dict(showgrid = True, gridcolor = f'rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.03)', gridwidth = 1, zeroline = False, ticksuffix = f' {unit}', tickfont = dict(size=11, color=Configuration.Palette1VeryDark), showline = False, ticks = ''),
-        hoverlabel           = dict(bgcolor = Configuration.Palette1VeryDark, bordercolor = Configuration.Palette1Dark, font_size = 12, font_family = Configuration.FontFamily, font_color = Configuration.WhiteColor, namelength = -1),
+        font                 = dict(family=Configuration.FontFamily, size=Configuration.ScalePx(10), color=Configuration.Palette1VeryDark),
+        xaxis                = dict(showgrid = True, gridcolor = f'rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.03)', gridwidth = 1, zeroline = False, tickformat = '%d %b\n%H:%M', tickfont = dict(size=Configuration.ScalePx(11), color=Configuration.Palette1VeryDark), showline = False, ticks = ''),
+        yaxis                = dict(showgrid = True, gridcolor = f'rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.03)', gridwidth = 1, zeroline = False, ticksuffix = f' {unit}', tickfont = dict(size=Configuration.ScalePx(11), color=Configuration.Palette1VeryDark), showline = False, ticks = ''),
+        hoverlabel           = dict(bgcolor = Configuration.Palette1VeryDark, bordercolor = Configuration.Palette1Dark, font_size = Configuration.ScalePx(12), font_family = Configuration.FontFamily, font_color = Configuration.WhiteColor, namelength = -1),
         hovermode            = 'x unified',
         showlegend           = False)
 
@@ -583,8 +583,8 @@ def CreateSummary(df):
 def RenderForecastTable(df, animate=True):
     animationClass = 'forecast-enter-delay-1' if animate else ''
     st.markdown(TableCss(), unsafe_allow_html=True)
-    summary = CreateSummary(df)
-    tableHtml = summary.to_html(index=False, classes='styled-table', escape=False)
+    summary        = CreateSummary(df)
+    tableHtml      = summary.to_html(index=False, classes='styled-table', escape=False)
     st.markdown(f"<div class='scrollable-table-container forecast-enter-item {animationClass}'>{tableHtml}</div>", unsafe_allow_html=True)
 
 # LLM
@@ -675,7 +675,7 @@ def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summary
     titleClass2        = 'forecast-enter-delay-2' if animate else ''
     cityName           = city[city['Id'] == selectedFilters['cityId']]['City'].iloc[0] if selectedFilters['cityId'] else "la città"
     st.markdown(f"<div class='llm-title forecast-enter-item {titleClass2}'>Consigli del Concierge</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='llm-subtitle forecast-enter-item {titleClass2}'>Idee per attività da fare nei prossimi giorni</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='llm-subtitle forecast-enter-item {titleClass2}'>Idee per attività da fare nei prossimi giorni in base allo scenario meteorologico</div>", unsafe_allow_html=True)
 
     if st.button('✨ Genera Suggerimenti', use_container_width=True):
         st.session_state['llm_comment_cache'] = ''

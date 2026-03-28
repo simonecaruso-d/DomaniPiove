@@ -75,7 +75,7 @@ def AggregateMetrics(unpivotedDf):
 # Write To DB
 def WriteToSupabase(byDaySpanDf, byProviderDf):
     'Write aggregated forecast accuracy metrics to Supabase tables ForecastAccuracyByDaySpan and ForecastAccuracyByProvider'
-    byDaySpanWriteResult = SupabaseWriter.WriteForecastAccuracyByDaySpanToSupabase(byDaySpanDf)
+    byDaySpanWriteResult  = SupabaseWriter.WriteForecastAccuracyByDaySpanToSupabase(byDaySpanDf)
     byProviderWriteResult = SupabaseWriter.WriteForecastAccuracyByProviderToSupabase(byProviderDf)
     return {'ByDaySpan': byDaySpanWriteResult, 'ByProvider': byProviderWriteResult}
 

@@ -13,8 +13,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import configuration.ConfigurationWeather as Configuration
 
-DB_SAFE_METRIC_NAME_MAP = {'PrecipitationProbability': 'PrecipitationProb'}
-
 # Helpers
 def NormalizeIsoDatetime(value):
     'Validate datetime is timezone-aware UTC and return ISO string; fails on naive/non-UTC values'
@@ -88,7 +86,7 @@ def NormalizeMetricName(value, maxLength=20):
     'Normalize metric names to DB-safe labels and validate max length'
     if value is None: return None
 
-    normalizedValue = DB_SAFE_METRIC_NAME_MAP.get(str(value), str(value))
+    normalizedValue = Configuration.DbSafeMetricNameMap.get(str(value), str(value))
     if len(normalizedValue) > maxLength: raise ValueError(f"Metric value '{normalizedValue}' exceeds max length {maxLength}")
     return normalizedValue
 

@@ -1,14 +1,14 @@
 # Environment Setting
+from datetime import datetime, timezone
 import hashlib
 import os
-import uuid
-from datetime import datetime, timezone
-
 import requests
 import streamlit as st
 from supabase import Client, create_client
+import uuid
 
 import configuration.ConfigurationWeather as Configuration
+import configuration.ConfigurationStreamlit as AppConfiguration
 import db.WriteToSupabase as SupabaseWriter
 
 # Functions
@@ -95,7 +95,7 @@ def ResolveCurrentPage(queryParams, defaultPage='Home'):
     if isinstance(page, list): return page[0] if page else defaultPage
     return page
 
-def BuildBaseMetadata(appVersion='1.0.0'):
+def BuildBaseMetadata(appVersion=AppConfiguration.AppVersion):
     'Build common metadata for each tracked event.'
     headers     = ReadHeadersFromStreamlit()
     queryParams = ReadQueryParams()
@@ -137,7 +137,7 @@ def ReadSessionElapsedSeconds():
         return int((datetime.now(timezone.utc) - startDatetime).total_seconds())
     except Exception: return None
 
-def BuildEventRow(eventType, page, payload, appVersion):
+def BuildEventRow(eventType, page, payload, appVersion=AppConfiguration.AppVersion):
     'Build event row payload for the VisitEvents table.'
     EnsureVisitSessionValues()
     base = BuildBaseMetadata(appVersion=appVersion)
@@ -163,7 +163,7 @@ def BuildEventRow(eventType, page, payload, appVersion):
         'SessionStartedAt': st.session_state.get('session_started_at'),
         'SessionElapsedSeconds': ReadSessionElapsedSeconds()}
 
-def WriteEventToSupabase(eventType, page=None, payload=None, appVersion='1.0.0', tableName='VisitEvents',
+def WriteEventToSupabase(eventType, page=None, payload=None, appVersion=AppConfiguration.AppVersion, tableName='VisitEvents',
                          supabaseUrl=Configuration.SupabaseUrl, supabaseKey=Configuration.SupabaseKey, failSilently=True):
     'Write one analytics event to Supabase.'
     row = BuildEventRow(eventType=eventType, page=page, payload=payload, appVersion=appVersion)
@@ -200,7 +200,7 @@ def WriteEventToSupabase(eventType, page=None, payload=None, appVersion='1.0.0',
 
     return True
 
-def EnsureVisitStarted(appVersion='1.0.0', tableName='VisitEvents', failSilently=True):
+def EnsureVisitStarted(appVersion=AppConfiguration.AppVersion, tableName='VisitEvents', failSilently=True):
     'Send exactly one visit_start event per Streamlit session.'
     EnsureVisitSessionValues()
     if st.session_state.get('_visit_started_sent'): return False
@@ -210,7 +210,7 @@ def EnsureVisitStarted(appVersion='1.0.0', tableName='VisitEvents', failSilently
     if sent: st.session_state['_visit_started_sent'] = True
     return sent
 
-def TrackPageView(currentPage, appVersion='1.0.0', tableName='VisitEvents', failSilently=True):
+def TrackPageView(currentPage, appVersion=AppConfiguration.AppVersion, tableName='VisitEvents', failSilently=True):
     'Send page_view only when selected page changes.'
     previousPage = st.session_state.get('_last_tracked_page')
     if previousPage == currentPage: return False
