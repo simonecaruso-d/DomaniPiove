@@ -381,7 +381,7 @@ HowItWorks       = f"""
                     <br>Seleziona la città e i giorni che ti interessano: puoi anche esplorare singole parti della giornata ed esaminare le previsioni storiche.
                     <br>Puoi così farti un'idea più precisa del tempo atteso e pianificare le tue attività di conseguenza: troverai anche un'assistente alla pianificazione! 🤖
                     <br><br>Se invece vuoi scoprire quanto sono accurate le previsioni, vai alla pagina <strong>Accuratezza</strong>: potrai confrontare le previsioni con il meteo reale e scoprire quali fonti sono più affidabili! 🔮
-                    <br><br>Esplora di seguito le città in cui siamo presenti al momento: se non c'è la tua, segnalacelo ma non preoccuparti, stiamo lavorando per aggiungerne altre 🌍
+                    <br><br>Esplora di seguito le città in cui siamo presenti al momento: se non c'è la tua, segnalacelo ma non preoccuparti, stiamo lavorando per aggiungerne altre. 🌍
                     """
 
 ImageCaptions    = {

@@ -24,7 +24,7 @@ def RunLoad(resultHolder, doneEvent):
     except Exception as e: resultHolder['error'] = e
     finally: doneEvent.set()
 
-@st.cache_data(ttl=1800)
+@st.cache_data(ttl=14400, show_spinner=False)
 def LoadData():
     'Load city and forecasts data from Supabase.'
     tableReadTasks = {

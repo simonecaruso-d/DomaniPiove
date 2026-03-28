@@ -102,11 +102,11 @@ def RenderSectionTitle(title, animationClass):
     st.markdown(SectionTitleHtml(title, animationClass), unsafe_allow_html=True)
 
 def RenderWhoWeAre():
-    RenderSectionTitle('Chi siamo', animationClass='home-enter-delay-1')
+    RenderSectionTitle('‎ ‎ ‎ Chi siamo', animationClass='home-enter-delay-1')
     st.markdown(TextBlockHtml(Configuration.WhoWeAre, animationClass='home-enter-delay-1'), unsafe_allow_html=True)
 
 def RenderHowItWorks():
-    RenderSectionTitle('Come funziona & Dove siamo', animationClass='home-enter-delay-3')
+    RenderSectionTitle('‎ ‎ ‎ Come funziona & Dove siamo', animationClass='home-enter-delay-3')
     st.markdown(TextBlockHtml(Configuration.HowItWorks, animationClass='home-enter-delay-3'), unsafe_allow_html=True)
 
 def GetImageCaption(imageStem):

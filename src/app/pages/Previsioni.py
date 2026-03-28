@@ -23,6 +23,12 @@ def PageStylesCss(animate=True):
         delay1Css    = delay2Css = ''
 
     return f"""<style>
+        /* ── Blocca auto-dark del browser: i colori custom restano uguali per tutti ── */
+        :root, html, body, [data-testid="stApp"] {{
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+        }}
+
         .forecast-enter-item    {{ {enterItemCss} }}
         .forecast-enter-delay-1 {{ {delay1Css} }}
         .forecast-enter-delay-2 {{ {delay2Css} }}
@@ -59,7 +65,7 @@ def PageStylesCss(animate=True):
         div[data-testid="stMultiSelect"] div[data-baseweb="select"] > div:first-child {{background: transparent !important; background-color: transparent !important; border: none !important; border-color: transparent !important; outline: none !important; box-shadow: none !important; min-height: 28px !important;}}
         div[data-testid="stMultiSelect"] div[data-baseweb="select"] span,
         div[data-testid="stMultiSelect"] div[data-baseweb="select"] div {{font-size: {Configuration.FontSize1} !important; line-height: {Configuration.LineHeight2} !important; color: rgba(255,255,255,0.88) !important; font-family: {Configuration.FontFamily} !important; font-weight: {Configuration.FontWeight1} !important;}}
-        div[data-testid="stMultiSelect"] span[data-baseweb="tag"] {{background-color: rgba(255,255,255,0.15) !important; border-radius: 6px !important; font-size: {Configuration.FontSize3} !important; font-family: {Configuration.FontFamily} !important; color: rgba(255,255,255,0.90) !important; padding: 1px 6px !important; margin: 1px !important;}}
+        div[data-testid="stMultiSelect"] span[data-baseweb="tag"] {{background-color: rgba(255,255,255,0.15) !important; border-radius: 6px !important; font-size: {Configuration.FontSize3} !important; font-family: {Configuration.FontFamily} !important; color: rgba(255,255,255,0.90) !important; padding: 0px 5px !important; margin: 0px !important;}}
         div[data-testid="stMultiSelect"] span[data-baseweb="tag"] svg {{fill: rgba(255,255,255,0.55) !important; width: 10px !important; height: 10px !important;}}
 
         /* ── Date input inner ── */
@@ -75,20 +81,24 @@ def PageStylesCss(animate=True):
 
         /* ── Dropdown menu (selectbox + multiselect) ── */
         div[data-baseweb="popover"] ul,
-        div[data-baseweb="menu"] {{background: {Configuration.Palette1VeryDark} !important; backdrop-filter: blur(28px) saturate(1.5) !important; border: none !important; border-radius: 10px !important; box-shadow: 0 8px 28px rgba(0,0,0,0.38) !important; padding: 4px !important;}}
+        div[data-baseweb="menu"] {{background: {Configuration.Palette1VeryDark} !important; backdrop-filter: blur(28px) saturate(1.5) !important; border: none !important; border-radius: 10px !important; box-shadow: 0 8px 28px rgba(0,0,0,0.38) !important; padding: 2px !important;}}
         div[data-baseweb="menu"] li,
-        div[data-baseweb="menu"] li * {{color: rgba(255,255,255,0.78) !important; font-size: {Configuration.FontSize3} !important; font-family: {Configuration.FontFamily} !important; background-color: transparent !important; border-radius: {Configuration.Spacing0B} !important; padding: 3px 8px !important; line-height: {Configuration.LineHeight2} !important;}}
+        div[data-baseweb="menu"] li * {{color: rgba(255,255,255,0.78) !important; font-size: {Configuration.FontSize1} !important; font-family: {Configuration.FontFamily} !important; background-color: transparent !important; border-radius: {Configuration.Spacing0B} !important; padding: 1px 6px !important; line-height: {Configuration.LineHeight1} !important;}}
+        div[data-baseweb="popover"] [role="listbox"],
+        div[data-baseweb="popover"] [role="option"],
+        div[data-baseweb="popover"] [role="option"] * {{font-size: {Configuration.FontSize1} !important; font-family: {Configuration.FontFamily} !important;}}
+        div[data-baseweb="popover"] [role="option"] {{min-height: 20px !important; margin: 0 !important;}}
         div[data-baseweb="menu"] li:hover {{background: rgba(255,255,255,0.09) !important;}}
 
         /* ── Calendario date picker ── */
         div[data-baseweb="calendar"] {{background: {Configuration.Palette1VeryDark} !important; border: none !important; border-radius: 10px !important; box-shadow: 0 8px 28px rgba(0,0,0,0.38) !important; font-family: {Configuration.FontFamily} !important;}}
-        div[data-baseweb="calendar"] * {{font-size: {Configuration.FontSize3} !important; font-family: {Configuration.FontFamily} !important; color: rgba(255,255,255,0.85) !important;}}
-        div[data-baseweb="calendar"] button {{font-size: {Configuration.FontSize3} !important; background: transparent !important; border: none !important; color: rgba(255,255,255,0.85) !important; border-radius: {Configuration.Spacing0B} !important;}}
+        div[data-baseweb="calendar"] * {{font-size: {Configuration.FontSize1} !important; font-family: {Configuration.FontFamily} !important; color: rgba(255,255,255,0.85) !important;}}
+        div[data-baseweb="calendar"] button {{font-size: {Configuration.FontSize1} !important; background: transparent !important; border: none !important; color: rgba(255,255,255,0.85) !important; border-radius: {Configuration.Spacing0B} !important;}}
         div[data-baseweb="calendar"] button:hover {{background: rgba(255,255,255,0.10) !important;}}
         div[data-baseweb="calendar"] [aria-selected="true"] button,
         div[data-baseweb="calendar"] [data-selected="true"] button {{background: rgba(255,255,255,0.22) !important; color: {Configuration.WhiteColor} !important; font-weight: {Configuration.FontWeight4} !important;}}
         div[data-baseweb="calendar"] [data-testid="CalendarHeader"] *,
-        div[data-baseweb="calendar"] select {{font-size: {Configuration.FontSize3} !important; font-weight: {Configuration.FontWeight3} !important; color: rgba(255,255,255,0.90) !important; background: transparent !important; border: none !important;}}
+        div[data-baseweb="calendar"] select {{font-size: {Configuration.FontSize1} !important; font-weight: {Configuration.FontWeight3} !important; color: rgba(255,255,255,0.90) !important; background: transparent !important; border: none !important;}}
     
         /* ── Grafico ── */
         div[data-testid="stPlotlyChart"] > div {{border-radius: {Configuration.Spacing4} !important; overflow: hidden !important; border: {Configuration.Spacing4} solid rgba({Configuration.Palette1VeryDark}, 0.10) !important; box-shadow: 0 4px 24px rgba({Configuration.Palette1VeryDark}, 0.06) !important; background: rgba(66, 103, 118, 0.005) !important;}}
@@ -297,10 +307,22 @@ def RenderCitySelectbox(city):
     treeOptions = [None]
     treeLabels  = {None: 'Seleziona città'}
 
+    def ToUnicodeBold(text):
+        upperOffset = ord('𝐀') - ord('A')
+        lowerOffset = ord('𝐚') - ord('a')
+        digitOffset = ord('𝟎') - ord('0')
+        chars = []
+        for char in str(text):
+            if 'A' <= char <= 'Z': chars.append(chr(ord(char) + upperOffset))
+            elif 'a' <= char <= 'z': chars.append(chr(ord(char) + lowerOffset))
+            elif '0' <= char <= '9': chars.append(chr(ord(char) + digitOffset))
+            else: chars.append(char)
+        return ''.join(chars)
+
     for state, group in cityOptions.groupby('State', sort=True):
         regionKey = f'__region__{state}'
         treeOptions.append(regionKey)
-        treeLabels[regionKey] = f'{state}'
+        treeLabels[regionKey] = ToUnicodeBold(state)
         for _, row in group.iterrows():
             key             = f'__city__{row["Id"]}'
             treeOptions.append(key)
@@ -357,14 +379,14 @@ def RenderValueFilters(city, calendar, forecasts, animate=True):
         providerSelected = RenderProviderMultiselect(forecasts)
 
     with columns[4]:
-        st.markdown("<div class='filter-label'>Data Previsione</div>", unsafe_allow_html=True)
+        st.markdown("<div class='filter-label'>Data previsione</div>", unsafe_allow_html=True)
         retrievalTimeSelected = RenderRetrievalDateSelectbox(forecasts)
 
     return {'cityId': cityIdSelected, 'dateRange': dateSelected, 'partOfDay': partOfDaySelected, 'provider': providerSelected, 'retrievalDatetime': retrievalTimeSelected}
 
 def RenderNoCityAlert():
     st.markdown(AlertCss(), unsafe_allow_html=True)
-    st.info('📍 Seleziona una città per visualizzare le previsioni.')
+    st.info('📍 Seleziona una città per visualizzare le previsioni')
     st.stop()
 
 # Data Helpers
@@ -449,9 +471,13 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
     normalizedValue = lambda value: (value - valueMin) / (valueMax - valueMin) if valueMax > valueMin else 0.5
 
     st.markdown(f"<div class='chart-title forecast-enter-item {animationClass}'>{selectedParameter}</div>"
-                f"<div class='chart-subtitle forecast-enter-item {animationClass}'>Andamento previsto</div>", unsafe_allow_html=True)
+                f"<div class='chart-subtitle forecast-enter-item {animationClass}'>Andamento previsto</div>"
+                f"<div class='chart-subtitle forecast-enter-item {animationClass}'>Selezionare un'area per effettuare lo zoom a livello orario - Doppio tap per ripristinare lo zoom al livello base</div>", unsafe_allow_html=True)
 
     figure = go.Figure()
+    lowColor  = PaletteColor(0.05)
+    midColor  = PaletteColor(0.50)
+    highColor = PaletteColor(0.95)
 
     for i in range(len(aggregated) - 1):
         valueMid  = (aggregated['Value'].iloc[i] + aggregated['Value'].iloc[i+1]) / 2
@@ -478,6 +504,26 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
             f'<extra></extra>'),
         showlegend    = False))
 
+    # Tracce dedicate alla legenda: spiegano la scala cromatica dell'area.
+    figure.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers',
+        marker=dict(size=9, color=f'rgba({HexToRgb(lowColor)}, 0.75)', symbol='square'),
+        name='Valore basso',
+        showlegend=True,
+        hoverinfo='skip'))
+    figure.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers',
+        marker=dict(size=9, color=f'rgba({HexToRgb(midColor)}, 0.75)', symbol='square'),
+        name='Valore medio',
+        showlegend=True,
+        hoverinfo='skip'))
+    figure.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers',
+        marker=dict(size=9, color=f'rgba({HexToRgb(highColor)}, 0.75)', symbol='square'),
+        name='Valore alto',
+        showlegend=True,
+        hoverinfo='skip'))
+
     figure.update_layout(
         paper_bgcolor        = f'rgba({HexToRgb(Configuration.AccentColor)}, 0.04)',
         plot_bgcolor         = 'rgba(0,0,0,0)',
@@ -488,7 +534,17 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
         yaxis                = dict(showgrid = True, gridcolor = f'rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.03)', gridwidth = 1, zeroline = False, ticksuffix = f' {unit}', tickfont = dict(size=Configuration.ScalePx(11), color=Configuration.Palette1VeryDark), showline = False, ticks = ''),
         hoverlabel           = dict(bgcolor = Configuration.Palette1VeryDark, bordercolor = Configuration.Palette1Dark, font_size = Configuration.ScalePx(12), font_family = Configuration.FontFamily, font_color = Configuration.WhiteColor, namelength = -1),
         hovermode            = 'x unified',
-        showlegend           = False)
+        showlegend           = True,
+        legend               = dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.01,
+            xanchor='left',
+            x=0,
+            font=dict(size=Configuration.ScalePx(10), color=Configuration.Palette1VeryDark),
+            bgcolor='rgba(0,0,0,0)',
+            borderwidth=0,
+            itemsizing='constant'))
 
     st.plotly_chart(figure, use_container_width=True, config={'displayModeBar': False})
 
@@ -677,7 +733,7 @@ def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summary
     st.markdown(f"<div class='llm-title forecast-enter-item {titleClass2}'>Consigli del Concierge</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='llm-subtitle forecast-enter-item {titleClass2}'>Idee per attività da fare nei prossimi giorni in base allo scenario meteorologico</div>", unsafe_allow_html=True)
 
-    if st.button('✨ Genera Suggerimenti', use_container_width=True):
+    if st.button('✨ Genera suggerimenti', use_container_width=True):
         st.session_state['llm_comment_cache'] = ''
         st.session_state['_streaming_active'] = True
 
