@@ -356,12 +356,21 @@ Spacing4       = '40px'
 Spacing5       = '50px'
 Spacing6       = '60px'
 Spacing6B      = '65px'
+Spacing7       = '70px'
+Spacing8       = '80px'
+Spacing9       = '90px'
+Spacing10      = '100px'
+Spacing11      = '110px'
+Spacing12      = '120px'
+Spacing13      = '130px'
+Spacing14      = '140px'
+Spacing15      = '150px'
 SpacingA       = '6px 12px'
 
 _BaseHeightGraph            = 450
 _BaseHeightMap              = 350
 _BaseHeightSlideshowControl = 20
-_BaseHeightWhoWeAre         = 300
+_BaseHeightWhoWeAre         = 350
 _BaseHeightSlideshow        = 250
 
 HeightGraph                 = 450

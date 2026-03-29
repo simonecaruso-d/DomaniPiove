@@ -165,11 +165,9 @@ def RenderSlideshow():
 
 def RenderSlideshowWithFragment():
     'Renders the slideshow using a fragment if available, otherwise renders normally.'
-    fragmentDecorator = getattr(st, 'fragment', None)
-    if fragmentDecorator is not None:
-        fragmentDecorator(RenderSlideshow)()
-        return
     RenderSlideshow()
+
+if getattr(st, 'fragment', None) is not None: RenderSlideshowWithFragment = st.fragment(RenderSlideshowWithFragment)
 
 def RenderMap(cities, animate=True):
     'Renders a map with markers for the specified cities, applying optional animation for entering elements.'
@@ -191,7 +189,7 @@ def RenderHomeContent(cities):
     viewportWidth             = Configuration.ResponsiveViewportWidth
     if viewportWidth <= 1300  : leftSectionGap = f"{Configuration.ScalePx(65)}px"
     elif viewportWidth <= 1380: leftSectionGap = f"{Configuration.ScalePx(120)}px"
-    else                      : leftSectionGap = Configuration.Spacing6B
+    else                      : leftSectionGap = Configuration.Spacing15
     if viewportWidth <= 1300  : rightSectionGap = f"{Configuration.ScalePx(165)}px"
     elif viewportWidth <= 1380: rightSectionGap = f"{Configuration.ScalePx(105)}px"
     else                      : rightSectionGap = Configuration.Spacing3
