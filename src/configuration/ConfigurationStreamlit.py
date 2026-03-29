@@ -113,9 +113,9 @@ HowItWorks       = f"""
 ImageCaptions    = {
     'Afoso'     : '📌 <span style="font-style: italic;">Venezia</span>        <br><br> Caldo settembrino in Veneto: quale migliore occasione per visitare Venezia e fare tappa in qualche bacaro?',
     'Nuvoloso'  : '📌 <span style="font-style: italic;">Appia Antica</span>   <br><br> Quel giorno, complice un meteo sereno, Simone ha stupito Chiara pianificando una passeggiata in una parte di Roma che lei non avrebbe mai immaginato!',
-    'Piovoso'   : '📌 <span style="font-style: italic;">Ferrara</span>        <br><br> Giornata metereologicamente orribile, ma non ci siamo persi d\'animo! Abbiamo visitato alcuni luoghi di cultura al chiuso, mangiato buona cucina emiliana nella più antica osteria del mondo e addirittura passeggiato in un parco',
-    'Soleggiato': '📌 <span style="font-style: italic;">Villa Pamphilj</span> <br><br> Con una giornata d\'inverno così soleggiata in cui i primi fiori preannunciano l\'arrivo della primavera, perché non un giro in uno dei più grandi parchi pubblici di Roma?',
-    'Ventoso'   : '📌 <span style="font-style: italic;">Ostia</span>          <br><br> Seduti sul pontile ad ammirare le onde: se non piove, il mare d\'inverno è davvero romantico',
+    'Piovoso'   : '📌 <span style="font-style: italic;">Ferrara</span>        <br><br> Giornata metereologicamente orribile, ma non ci siamo persi d\'animo! Abbiamo visitato alcuni luoghi di cultura al chiuso, mangiato buona cucina emiliana e passeggiato in un parco.',
+    'Soleggiato': '📌 <span style="font-style: italic;">Villa Pamphilj</span> <br><br> Con una così soleggiata giornata d\'inverno, in cui i primi fiori preannunciano l\'arrivo della primavera, perché non un giro in uno dei più grandi parchi pubblici di Roma?',
+    'Ventoso'   : '📌 <span style="font-style: italic;">Ostia</span>          <br><br> Seduti sul pontile ad ammirare le onde: se non piove, il mare d\'inverno è davvero romantico.',
 }
 
 # Specific Assets - LLM
