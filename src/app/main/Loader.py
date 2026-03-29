@@ -15,7 +15,7 @@ def GetBase64Logo(logoPath = Configuration.LogoPath):
 # CSS
 def HideRunningIndicatorCss():
     'Return CSS to hide Streamlit\'s default running indicator and style the custom loader.'
-    loaderMessageMaxWidth = Configuration.ScalePx(500)
+    loaderMessageMaxWidth = Configuration.ScalePx(600)
     loaderBarWidth        = Configuration.ScalePx(320)
     loaderBarHeight       = Configuration.ScalePx(8)
 

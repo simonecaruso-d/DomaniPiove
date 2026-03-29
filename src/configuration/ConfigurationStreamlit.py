@@ -41,55 +41,55 @@ ThresholdsSummer = {'TempTarget': 25, 'TempTolerance': 5, 'CloudImpactExp': 1.2,
 
 # Specific Assets - Loader
 LoadingMessages = [
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"It's rainin' men, hallelujah! It's rainin' men, amen"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">It's rainin' men, hallelujah! It's rainin' men, amen</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">It's Raining Men - The Weather Girls</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"Why does it always rain on me? Is it because I lied when I was seventeen?"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">Why does it always rain on me? Is it because I lied when I was seventeen?</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Why Does It Always Rain on Me? - Travis</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"I only want to see you in the purple rain"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">I only want to see you in the purple rain</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Purple Rain - Prince</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"Have you ever seen the rain comin' down on a sunny day?"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">Have you ever seen the rain comin' down on a sunny day?</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Have You Ever Seen the Rain - Creedence Clearwater Revival</p>""",
     
-    """⛈️ <p style="font-style: italic; margin: 0.5rem 0;">"Stormy weather...Keeps rainin' all the time"</p>
+    """⛈️ <p style="font-style: italic; margin: 0.5rem 0;">Stormy weather...Keeps rainin' all the time</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Stormy Weather - Ethel Waters</p>""",
     
-    """🌬️ <p style="font-style: italic; margin: 0.5rem 0;">"The answer, my friend, is blowin' in the wind"</p>
+    """🌬️ <p style="font-style: italic; margin: 0.5rem 0;">The answer, my friend, is blowin' in the wind</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Blowin' in the Wind - Bob Dylan</p>""",
     
-    """☁️ <p style="font-style: italic; margin: 0.5rem 0;">"Valium skies, valium skies. I got valium skies"</p>
+    """☁️ <p style="font-style: italic; margin: 0.5rem 0;">Valium skies, valium skies. I got valium skies</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Valium Skies - The Verve</p>""",
     
-    """☀️ <p style="font-style: italic; margin: 0.5rem 0;">"Here comes the sun, and I say it's all right"</p>
+    """☀️ <p style="font-style: italic; margin: 0.5rem 0;">Here comes the sun, and I say it's all right</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Here Comes the Sun - The Beatles</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"Senti che fuori piove, senti che bel rumore"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">Senti che fuori piove, senti che bel rumore</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Sally - Vasco Rossi</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"Piove, senti come piove, Madonna come piove"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">Piove, senti come piove, Madonna come piove</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Piove - Jovanotti</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"Piove, piove, sulle case vecchie e sulle nuove spose"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">Piove, piove, sulle case vecchie e sulle nuove spose</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Piove su di noi - Enrico Ruggeri</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"La pioggia bussa contro il finestrino, e noi a discutere di niente fino a far mattino"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">La pioggia bussa contro il finestrino, e noi a discutere di niente fino a far mattino</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Frigobar - Franco126</p>""",
     
-    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">"Ci sono ancora io, sì, sotto la pioggia"</p>
+    """🌧️ <p style="font-style: italic; margin: 0.5rem 0;">Ci sono ancora io, sì, sotto la pioggia</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Pioggia - Giaime</p>""",
     
-    """☀️ <p style="font-style: italic; margin: 0.5rem 0;">"Notti magiche...Sotto il cielo di un'estate italiana"</p>
+    """☀️ <p style="font-style: italic; margin: 0.5rem 0;">Notti magiche...Sotto il cielo di un'estate italiana</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Un'estate italiana - Edoardo Bennato & Gianna Nannini</p>""",
     
-    """☀️ <p style="font-style: italic; margin: 0.5rem 0;">"Non senti che tremo? È il segno di un'estate che vorrei potesse non finire mai"</p>
+    """☀️ <p style="font-style: italic; margin: 0.5rem 0;">Non senti che tremo? È il segno di un'estate che vorrei potesse non finire mai</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Estate - Negramaro</p>""",
     
-    """❄️ <p style="font-style: italic; margin: 0.5rem 0;">"La nevicata del '56, Roma era tutta candida"</p>
+    """❄️ <p style="font-style: italic; margin: 0.5rem 0;">La nevicata del '56, Roma era tutta candida</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">La nevicata del '56 - Mia Martini</p>""",
     
-    """❄️ <p style="font-style: italic; margin: 0.5rem 0;">"Vedrai, la neve se ne andrà domani"</p>
+    """❄️ <p style="font-style: italic; margin: 0.5rem 0;">Vedrai, la neve se ne andrà domani</p>
     <p style="font-weight: bold; margin: 0.2rem 0;">Inverno - Fabrizio De André</p>"""
 ]
 
@@ -370,7 +370,7 @@ SpacingA       = '6px 12px'
 _BaseHeightGraph            = 450
 _BaseHeightMap              = 350
 _BaseHeightSlideshowControl = 20
-_BaseHeightWhoWeAre         = 350
+_BaseHeightWhoWeAre         = 300
 _BaseHeightSlideshow        = 250
 
 HeightGraph                 = 450
