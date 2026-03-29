@@ -3,7 +3,6 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import streamlit as st
 import sys
-import threading
 
 SourceDirectory = Path(__file__).resolve().parents[2]
 if str(SourceDirectory) not in sys.path: sys.path.insert(0, str(SourceDirectory))
@@ -16,13 +15,6 @@ import app.pages.Previsioni                 as ForecastElements
 import configuration.ConfigurationStreamlit as Configuration
 import db.ReadFromSupabase                  as SupabaseReader
 import db.TrackDashboardVisits              as VisitTracker
-
-# Data Loading
-def RunLoad(resultHolder, doneEvent):
-    'Load data in a separate thread and store the result or error in resultHolder, then signal completion with doneEvent.'
-    try                  : resultHolder['data'] = LoadData()
-    except Exception as e: resultHolder['error'] = e
-    finally              : doneEvent.set()
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def LoadData():
@@ -80,20 +72,18 @@ def Main():
     isFirstLoad = 'app_data' not in st.session_state
 
     if isFirstLoad:
-        resultHolder = {}
-        doneEvent    = threading.Event()
+        loaderSlot = Loader.RenderLoader()
 
-        thread = threading.Thread(target=RunLoad, args=(resultHolder, doneEvent), daemon=True)
-        thread.start()
-
-        if not doneEvent.wait(timeout=0.3): Loader.RenderLoader(doneEvent)
-
-        if 'error' in resultHolder:
-            st.error(f"Errore nel caricamento dei dati: {resultHolder['error']}")
+        try:
+            result = LoadData()
+        except Exception as loadError:
+            loaderSlot.empty()
+            st.error(f"Errore nel caricamento dei dati: {loadError}")
             st.stop()
 
-        st.session_state['app_data'] = resultHolder['data']
-        staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = resultHolder['data']
+        loaderSlot.empty()
+        st.session_state['app_data'] = result
+        staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = result
     
     else: staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = st.session_state['app_data']
         

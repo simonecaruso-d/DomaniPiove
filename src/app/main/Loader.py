@@ -2,8 +2,6 @@
 import base64
 import random
 import streamlit as st
-import threading
-import time
 
 import configuration.ConfigurationStreamlit as Configuration
 
@@ -33,34 +31,26 @@ def HideRunningIndicatorCss():
             font-family: {Configuration.FontFamily} !important; color: {Configuration.WhiteColor} !important; text-align: center; max-width: {loaderMessageMaxWidth}px;
             animation: fadeInUp 1s ease-out; padding: {Configuration.Spacing2}; background: {Configuration.BackgroundText}; backdrop-filter: blur(16px); border-radius: {Configuration.RadiusInput}px; border: 1px solid {Configuration.BackgroundAlpha};}}
         @keyframes fadeInUp {{ from {{ opacity: 0; transform: translateY(24px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-        .loader-bar-track {{width: {loaderBarWidth}px; height: {loaderBarHeight}px; background: {Configuration.BackgroundAlpha}; border-radius: {Configuration.RadiusInput}px; overflow: hidden; margin-top: {Configuration.Spacing3}; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);}}
-        .loader-bar-fill {{height: 100%; border-radius: {Configuration.RadiusInput}px; background: linear-gradient(90deg, {Configuration.TertiaryColor} 0%, {Configuration.PrimaryColor} 50%, {Configuration.Palette1Light} 100%); box-shadow: 0 0 24px {Configuration.PrimaryColor}; transition: width 0.8s {Configuration.AnimationEasing};}}
+        .loader-bar-track {{width: {loaderBarWidth}px; height: {loaderBarHeight}px; background: {Configuration.BackgroundAlpha}; border-radius: {Configuration.RadiusInput}px; overflow: hidden; margin-top: {Configuration.Spacing3}; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1); position: relative;}}
+        .loader-bar-fill {{position: absolute; top: 0; left: -35%; width: 35%; height: 100%; border-radius: {Configuration.RadiusInput}px; background: linear-gradient(90deg, {Configuration.TertiaryColor} 0%, {Configuration.PrimaryColor} 50%, {Configuration.Palette1Light} 100%); box-shadow: 0 0 24px {Configuration.PrimaryColor}; animation: loaderSweep 1.6s ease-in-out infinite;}}
         .weather-emoji {{ font-size: 4em; animation: weatherFloat 3s ease-in-out infinite; margin-bottom: {Configuration.Spacing2}; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }}
         @keyframes weatherFloat {{ 0%, 100% {{ transform: translateY(0) rotate(0deg); }} 50% {{ transform: translateY(-12px) rotate(5deg); }} }}
+        @keyframes loaderSweep {{ 0% {{ left: -35%; }} 100% {{ left: 100%; }} }}
     </style>"""
 
 # Loader
-def RenderLoader(doneEvent: threading.Event, stepSeconds = 5):
-    'Render a custom loading screen with animated messages and a progress bar while data is being loaded in the background.'
+def RenderLoader(message = None):
+    'Render a custom loading screen once and return its placeholder so the caller can clear it after loading.'
     st.markdown(HideRunningIndicatorCss(), unsafe_allow_html=True)
-    random.shuffle(Configuration.LoadingMessages)
-    
+
     logoBase64 = GetBase64Logo()
     slot       = st.empty()
-    startTime  = time.time()
+    message    = message or random.choice(Configuration.LoadingMessages)
 
-    while not doneEvent.is_set():
-        elapsed     = time.time() - startTime
-        progress    = int(100 * elapsed / (elapsed + 10))
-        currentStep = int(elapsed // stepSeconds)
-        message     = Configuration.LoadingMessages[currentStep % len(Configuration.LoadingMessages)]
-               
-        slot.markdown(f"""
-                <div class='loader-container'><div class='weather-emoji'><img src="data:image/png;base64,{logoBase64}" width="{Configuration.ScalePx(80)}"></div>
-                <div class='loader-title'>Domani Piove</div>
-                <div class='loader-message'>{message}</div>
-                <div class='loader-bar-track'><div class='loader-bar-fill' style='width:{progress}%;'></div></div></div>""", unsafe_allow_html=True)
+    slot.markdown(f"""
+            <div class='loader-container'><div class='weather-emoji'><img src="data:image/png;base64,{logoBase64}" width="{Configuration.ScalePx(80)}"></div>
+            <div class='loader-title'>Domani Piove</div>
+            <div class='loader-message'>{message}</div>
+            <div class='loader-bar-track'><div class='loader-bar-fill'></div></div></div>""", unsafe_allow_html=True)
 
-        doneEvent.wait(timeout=1.0)
-
-    slot.empty()
+    return slot

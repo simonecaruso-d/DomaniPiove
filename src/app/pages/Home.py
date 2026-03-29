@@ -131,61 +131,38 @@ def LoadSlideshowData(imagesDirectory=str(Configuration.ImagesHistoryDirectory))
     slideshowData   = []
 
     for imagePath in sorted(imagesDirectory.iterdir()):
-        with open(imagePath, 'rb') as imageFile: imageB64 = base64.b64encode(imageFile.read()).decode()
-        slideshowData.append({'stem': imagePath.stem, 'display_name': imagePath.stem.replace('_', ' ').title(), 'caption': GetImageCaption(imagePath.stem), 'base64': imageB64})
+        slideshowData.append({'stem': imagePath.stem, 'display_name': imagePath.stem.replace('_', ' ').title(), 'caption': GetImageCaption(imagePath.stem), 'path': str(imagePath)})
     return slideshowData
 
-def SlideshowHtml(slides):
-    'Builds a self-contained HTML/JS slideshow with all images embedded for zero-round-trip client-side navigation.'
-    total        = len(slides)
-    imgHeight    = Configuration.HeightSlideshow
-    ctrlHeight   = Configuration.HeightSlideshowControl
-    buttonHeight = max(ctrlHeight, 34)
-
-    imgDivs     = ''.join(f"""<div class="slide-img" style="display:{"block" if i == 0 else "none"}"><img src="data:image/png;base64,{s["base64"]}" /></div>""" for i, s in enumerate(slides))
-    captionDivs = ''.join(f"""<div class="slide-cap" style="display:{"block" if i == 0 else "none"}"><div class="cap-title">{s["display_name"]}</div><div class="cap-text">{s["caption"]}</div></div>""" for i, s in enumerate(slides))
-
-    return f"""<!DOCTYPE html><html><head><style>
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        html, body {{ background: transparent; overflow: hidden; }}
-        .slideshow  {{ width: 100%; font-family: {Configuration.FontFamily}; }}
-        .slide-row  {{ display: grid; grid-template-columns: 3fr 2fr; gap: 8px; }}
-        .slide-img  {{ height: {imgHeight}px; border-radius: {Configuration.Border3}; overflow: hidden; display: flex; align-items: center; justify-content: center; }}
-        .slide-img img {{ width: 100%; height: 100%; object-fit: cover; border-radius: {Configuration.Border3}; }}
-        .slide-cap  {{ height: {imgHeight}px; overflow: hidden; border-radius: {Configuration.Border2}; padding: {Configuration.Border1}; background: {Configuration.BackgroundAlpha}; color: {Configuration.AccentColor}; }}
-        .cap-title  {{ font-size: {Configuration.FontSize3}; font-weight: {Configuration.FontWeight4}; margin-bottom: {Configuration.Spacing3}; color: {Configuration.AccentColor}; }}
-        .cap-text   {{ font-size: {Configuration.FontSize2}; line-height: {Configuration.LineHeight4}; }}
-        .controls   {{ display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; margin-top: {Configuration.Spacing2}; align-items: center; }}
-        .ctrl-btn   {{ height: {buttonHeight}px; min-height: {buttonHeight}px; background: {Configuration.BackgroundAlpha}; color: {Configuration.AccentColor}; border: 1px solid {Configuration.AccentColor}; border-radius: {Configuration.Border2}; cursor: pointer; font-weight: {Configuration.FontWeight4}; font-family: {Configuration.FontFamily}; font-size: {Configuration.FontSize2}; transition: opacity 0.15s; }}
-        .ctrl-btn:hover {{ opacity: 0.75; }}
-        .ctrl-counter {{ height: {ctrlHeight}px; display: flex; align-items: center; justify-content: center; color: {Configuration.AccentColor}; font-size: {Configuration.FontSize2}; font-weight: {Configuration.FontWeight3}; font-family: {Configuration.FontFamily}; }}
-    </style></head><body>
-    <div class="slideshow">
-        <div class="slide-row"><div id="imgs">{imgDivs}</div><div id="caps">{captionDivs}</div>
-        </div>
-        <div class="controls"><button class="ctrl-btn" onclick="move(-1)">&#9664;</button><div class="ctrl-counter" id="counter">1 / {total}</div><button class="ctrl-btn" onclick="move(1)">&#9654;</button>
-        </div>
-    </div>
-    <script>
-        var idx = 0, total = {total};
-        function move(dir) {{
-            var imgs = document.querySelectorAll('.slide-img');
-            var caps = document.querySelectorAll('.slide-cap');
-            imgs[idx].style.display = 'none';
-            caps[idx].style.display = 'none';
-            idx = (idx + dir + total) % total;
-            imgs[idx].style.display = 'block';
-            caps[idx].style.display = 'block';
-            document.getElementById('counter').textContent = (idx + 1) + ' / ' + total;
-        }}
-    </script>
-    </body></html>"""
-
 def RenderSlideshow():
-    'Renders the slideshow as a self-contained HTML component with client-side navigation (no server round-trip on slide change).'
-    slides      = LoadSlideshowData()
-    totalHeight = Configuration.HeightSlideshow + max(Configuration.HeightSlideshowControl, 34) + 28
-    st.components.v1.html(SlideshowHtml(slides), height=totalHeight, scrolling=False)
+    'Renders the slideshow section of the home page using Streamlit media paths to reduce payload size across reruns.'
+    slideshowData = LoadSlideshowData()
+
+    if 'home_slideshow_index' not in st.session_state:
+        st.session_state['home_slideshow_index'] = 0
+
+    currentIndex = st.session_state['home_slideshow_index'] % len(slideshowData)
+    currentSlide = slideshowData[currentIndex]
+
+    imageColumn, captionColumn = st.columns([3, 2])
+    with imageColumn:
+        st.image(currentSlide['path'], use_container_width=True)
+    with captionColumn:
+        st.markdown(SlideCaptionHtml(currentSlide['display_name'], currentSlide['caption'], animationClass='home-enter-delay-2'), unsafe_allow_html=True)
+
+    st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
+
+    previousColumn, counterColumn, nextColumn = st.columns([1, 2, 1])
+    with previousColumn:
+        if st.button('◀', key='home_slide_prev', type='secondary', use_container_width=True):
+            st.session_state['home_slideshow_index'] = (currentIndex - 1) % len(slideshowData)
+            st.rerun()
+    with counterColumn:
+        st.markdown(SlideCounterHtml(currentIndex + 1, len(slideshowData), animationClass='home-enter-delay-2'), unsafe_allow_html=True)
+    with nextColumn:
+        if st.button('▶', key='home_slide_next', type='secondary', use_container_width=True):
+            st.session_state['home_slideshow_index'] = (currentIndex + 1) % len(slideshowData)
+            st.rerun()
 
 def RenderMap(cities, animate=True):
     'Renders a map with markers for the specified cities, applying optional animation for entering elements.'
