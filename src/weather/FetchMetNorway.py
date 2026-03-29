@@ -15,13 +15,13 @@ def BuildMetNorwayParams(latitude, longitude):
 
 def BuildMetNorwayRecord(cityId, retrievalDatetime, entry):
     'Map one MET Norway timeseries entry to standardized output fields'
-    instant   = entry['data']['instant']['details']
-    next1h    = entry.get('data', {}).get('next_1_hours', {}).get('details', {})
+    instant       = entry['data']['instant']['details']
+    next1h        = entry.get('data', {}).get('next_1_hours', {}).get('details', {})
 
-    temperature              = instant.get('air_temperature')
-    humidity                 = instant.get('relative_humidity')
-    windSpeed                = instant.get('wind_speed')
-    precipitation            = next1h.get('precipitation_amount')
+    temperature   = instant.get('air_temperature')
+    humidity      = instant.get('relative_humidity')
+    windSpeed     = instant.get('wind_speed')
+    precipitation = next1h.get('precipitation_amount')
 
     return {
         'Provider'                : 'MetNorway',
@@ -36,8 +36,7 @@ def BuildMetNorwayRecord(cityId, retrievalDatetime, entry):
         'Rain'                    : precipitation,
         'Snowfall'                : Helpers.EstimateSnowfall(precipitation, temperature),
         'CloudCover'              : instant.get('cloud_area_fraction') / 100 if instant.get('cloud_area_fraction') is not None else None,
-        'WindSpeed'               : Helpers.NormalizeWindSpeedToKmh(windSpeed, 'm/s'),
-    }
+        'WindSpeed'               : Helpers.NormalizeWindSpeedToKmh(windSpeed, 'm/s')}
 
 def FetchMetNorway(cityId, latitude, longitude):
     'Get hourly forecasts from MET Norway Locationforecast API (no API key required)'
@@ -49,6 +48,6 @@ def FetchMetNorway(cityId, latitude, longitude):
     timeseries        = data.get('properties', {}).get('timeseries')
 
     for entry in timeseries:
-        record        = BuildMetNorwayRecord(cityId, retrievalDatetime, entry)
+        record               = BuildMetNorwayRecord(cityId, retrievalDatetime, entry)
         if record is not None: records.append(record)
     return records

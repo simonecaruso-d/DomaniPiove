@@ -49,13 +49,12 @@ def BuildVisualCrossingRecord(cityId, retrievalDatetime, hourEntry):
         'Rain'                    : precipitation if precipitation is not None and 'snow' not in precipitationTypes else 0.0,
         'Snowfall'                : snowfall,
         'CloudCover'              : cloudCover,
-        'WindSpeed'               : windSpeed,
-    }
+        'WindSpeed'               : windSpeed}
 
 def FetchVisualCrossing(cityId, latitude, longitude, forecastDays=Configuration.OthersMaxForecastDays):
     'Get hourly forecasts from Visual Crossing Timeline API'
     retrievalDatetime = Helpers.CurrentUtcIso()
-    records = []
+    records           = []
 
     requestParameters = BuildVisualCrossingParams(Configuration.VisualCrossingApiKey)
     requestUrl        = f'{Configuration.VisualCrossingUrl}/{latitude},{longitude}'

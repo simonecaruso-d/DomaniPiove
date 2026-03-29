@@ -19,13 +19,15 @@ import db.TrackDashboardVisits              as VisitTracker
 
 # Data Loading
 def RunLoad(resultHolder, doneEvent):
-    try: resultHolder['data'] = LoadData()
+    'Load data in a separate thread and store the result or error in resultHolder, then signal completion with doneEvent.'
+    try                  : resultHolder['data'] = LoadData()
     except Exception as e: resultHolder['error'] = e
-    finally: doneEvent.set()
+    finally              : doneEvent.set()
 
-@st.cache_data(ttl=14400, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def LoadData():
     'Load city and forecasts data from Supabase.'
+    loadedTables   = {}
     tableReadTasks = {
         'StaticEvents'              : lambda: SupabaseReader.SafeTableRead(tableName='StaticEvents', columns='*'),
         'Calendar'                  : lambda: SupabaseReader.SafeTableRead(tableName='Calendar', columns='*'),
@@ -33,27 +35,21 @@ def LoadData():
         'Forecast'                  : lambda: SupabaseReader.SafeTableRead(tableName='Forecast', columns='*'),
         'ForecastAccuracyByDaySpan' : lambda: SupabaseReader.SafeTableRead(tableName='ForecastAccuracyByDaySpan', columns=['Provider', 'DaySpan', 'Metric', 'MAE']),
         'ForecastAccuracyByProvider': lambda: SupabaseReader.SafeTableRead(tableName='ForecastAccuracyByProvider', columns=['Provider', 'Metric', 'MAE'])}
-
-    loadedTables = {}
+  
     with ThreadPoolExecutor(max_workers=len(tableReadTasks)) as executor:
         futureByTable = {tableName: executor.submit(task) for tableName, task in tableReadTasks.items()}
 
         for tableName, future in futureByTable.items():
-            try: loadedTables[tableName] = future.result()
+            try                          : loadedTables[tableName] = future.result()
             except Exception as readError: raise RuntimeError(f"Errore nel caricamento della tabella '{tableName}'") from readError
 
-    staticEvents = loadedTables['StaticEvents']
-    staticEvents.drop(columns=['Id'], inplace=True)
-
-    calendar = loadedTables['Calendar']
-    city     = loadedTables['City']
-
-    forecast = loadedTables['Forecast']
-
+    staticEvents               = loadedTables['StaticEvents'].drop(columns=['Id'], inplace=True)
+    calendar                   = loadedTables['Calendar']
+    city                       = loadedTables['City']
+    forecast                   = loadedTables['Forecast']
     forecastAccuracyByDaySpan  = loadedTables['ForecastAccuracyByDaySpan']
-    forecastAccuracyByProvider = loadedTables['ForecastAccuracyByProvider']
-
-    updateDate = forecast['UpdatedAt'].max()
+    forecastAccuracyByProvider = loadedTables['ForecastAccuracyByProvider'] 
+    updateDate                 = forecast['UpdatedAt'].max()
     
     return staticEvents, calendar, city, forecast, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate
 
@@ -98,6 +94,7 @@ def Main():
 
         st.session_state['app_data'] = resultHolder['data']
         staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = resultHolder['data']
+    
     else: staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = st.session_state['app_data']
         
     currentPage = HomeUI.RenderLayout(updateDate=updateDate)

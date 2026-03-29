@@ -8,33 +8,37 @@ import configuration.ConfigurationStreamlit as Configuration
 
 # HTML Templates
 def SectionTitleHtml(title, animationClass):
+    'Returns HTML for a section title with the specified text and animation class.'
     return f'<div class="home-section-title-wrap home-enter-item {animationClass}"><h3 class="home-section-title">{title}</h3></div>'
 
 def TextBlockHtml(content, animationClass):
+    'Returns HTML for a text block with the specified content and animation class.'
     return f'<div class="home-text-block home-enter-item {animationClass}"><p class="home-text-paragraph">{content}</p></div>'
 
 def SlideImageHtml(imageB64, animationClass):
+    'Returns HTML for a slideshow image with the specified base64-encoded image data and animation class.'
     return f'<div class="home-enter-item {animationClass} home-slide-image-shell"><img class="home-slide-image" src="data:image/png;base64,{imageB64}" /></div>'
 
 def SlideCaptionHtml(displayName, captionText, animationClass):
-    return f'''<div class="home-enter-item {animationClass} home-slide-caption">
-                <div class="home-slide-caption-title">{displayName}</div>
-                <div class="home-slide-caption-text">{captionText}</div>
-               </div>'''
+    'Returns HTML for a slideshow caption with the specified display name, caption text, and animation class.'
+    return f"""<div class="home-enter-item {animationClass} home-slide-caption"><div class="home-slide-caption-title">{displayName}</div><div class="home-slide-caption-text">{captionText}</div></div>"""
 
 def SlideCounterHtml(current, total, animationClass):
+    'Returns HTML for a slideshow counter with the specified current and total values and animation class.'
     return f"<div class='home-enter-item {animationClass} home-slide-counter'>{current} / {total}</div>"
 
 def MapMarkerHtml(cityName):
-    return f'''<div style="font-family: {Configuration.FontFamily}; background: {Configuration.AccentColor}; 
+    'Returns HTML for a map marker popup with the specified city name.'
+    return f"""<div style="font-family: {Configuration.FontFamily}; background: {Configuration.AccentColor}; 
                 color: {Configuration.WhiteColor}; padding: {Configuration.Border1}; 
                 border-radius: {Configuration.Border1}; font-size: {Configuration.FontSizeA};
                 font-weight: {Configuration.FontWeight2}; letter-spacing: {Configuration.LetterSpacing2}; 
                 white-space: 'nowrap'; box-shadow: {Configuration.BoxShadowMarker}; 
-                text-align: 'center';">{cityName}</div>'''
+                text-align: 'center';">{cityName}</div>"""
 
 # CSS Templates
 def PageStylesCss(animate):
+    'Returns CSS styles for the home page, with optional animation for entering elements.'
     if animate:
         enterItemCss  = f'opacity: 0; transform: translateY(28px); animation: homeEnterUp {Configuration.AnimationDuration} {Configuration.AnimationEasing} forwards; will-change: opacity, transform;'
         delay1Css     = f'animation-delay: {Configuration.AnimationDelay1};'
@@ -70,6 +74,7 @@ def PageStylesCss(animate):
     </style>"""
 
 def TitleCss():
+    'Returns CSS styles for the fixed title on the home page, adjusting position based on sidebar state.'
     return f"""<style>
         .home-title-fixed {{
             position: fixed; top: {Configuration.TitleTopPx}; left: {Configuration.TitleLeftCollapsedPx};
@@ -83,8 +88,9 @@ def TitleCss():
     </style><div class="home-title-fixed">Home</div>"""
 
 def MapContainerCss(animate):
-    mapEnterCss = (f'opacity: 0; transform: translateY(28px); animation: homeMapEnterUp {Configuration.AnimationDuration} {Configuration.AnimationEasing} {Configuration.AnimationDelay3} forwards; will-change: opacity, transform;'
-                   if animate else 'opacity: 1; transform: none;')
+    'Returns CSS styles for the map container on the home page, with optional animation for entering elements.'
+    mapEnterCss = (f'opacity: 0; transform: translateY(28px); animation: homeMapEnterUp {Configuration.AnimationDuration} {Configuration.AnimationEasing} {Configuration.AnimationDelay3} forwards; will-change: opacity, transform;' if animate else 'opacity: 1; transform: none;')
+    
     return f"""<style> html, body {{ margin: 0; padding: 0; overflow: hidden; background: transparent; }}
         .home-map-enter {{ {mapEnterCss} border-radius: {Configuration.Border2}; overflow: hidden; }}
         @keyframes homeMapEnterUp {{ from {{ opacity: 0; transform: translateY(28px); }}
@@ -93,45 +99,52 @@ def MapContainerCss(animate):
 
 # Rendering Functions
 def RenderPageStyles(animate = True):
+    'Renders the page styles for the home page, applying animations if specified.'
     st.markdown(PageStylesCss(animate), unsafe_allow_html=True)
 
 def RenderTitle():
+    'Renders the fixed title for the home page.'
     st.markdown(TitleCss(), unsafe_allow_html=True)
 
 def RenderSectionTitle(title, animationClass):
+    'Renders a section title with optional animation class.'
     st.markdown(SectionTitleHtml(title, animationClass), unsafe_allow_html=True)
 
 def RenderWhoWeAre():
+    'Renders the "Chi siamo" section of the home page with a title and text block.'
     RenderSectionTitle('‎ ‎ ‎ Chi siamo', animationClass='home-enter-delay-1')
     st.markdown(TextBlockHtml(Configuration.WhoWeAre, animationClass='home-enter-delay-1'), unsafe_allow_html=True)
 
 def RenderHowItWorks():
+    'Renders the "Come funziona & Dove siamo" section of the home page with a title and text block.'
     RenderSectionTitle('‎ ‎ ‎ Come funziona & Dove siamo', animationClass='home-enter-delay-3')
     st.markdown(TextBlockHtml(Configuration.HowItWorks, animationClass='home-enter-delay-3'), unsafe_allow_html=True)
 
 def GetImageCaption(imageStem):
+    'Returns the caption for a given image stem, or a default caption if not found.'
     return Configuration.ImageCaptions.get(imageStem, f'Scenario meteorologico: {imageStem.replace("_", " ").title()}.')
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def LoadSlideshowData(imagesDirectory=str(Configuration.ImagesHistoryDirectory)):
+    'Loads slideshow data from the specified images directory. Caches the result for 1 hour to improve performance.'
     imagesDirectory = Path(imagesDirectory)
     slideshowData   = []
 
     for imagePath in sorted(imagesDirectory.iterdir()):
         with open(imagePath, 'rb') as imageFile: imageB64 = base64.b64encode(imageFile.read()).decode()
-        slideshowData.append({'stem'           : imagePath.stem,
-                              'display_name'   : imagePath.stem.replace('_', ' ').title(),
-                              'caption'        : GetImageCaption(imagePath.stem),
-                              'base64'         : imageB64})
+        slideshowData.append({'stem': imagePath.stem, 'display_name': imagePath.stem.replace('_', ' ').title(), 'caption': GetImageCaption(imagePath.stem), 'base64': imageB64})
     return slideshowData
 
 def PreviousSlide(totalImages):
+    'Updates the slideshow index to show the previous slide, wrapping around to the end if necessary.'
     st.session_state['home_slideshow_index'] = (st.session_state.get('home_slideshow_index', 0) - 1) % totalImages
 
 def NextSlide(totalImages):
+    'Updates the slideshow index to show the next slide, wrapping around to the beginning if necessary.'
     st.session_state['home_slideshow_index'] = (st.session_state.get('home_slideshow_index', 0) + 1) % totalImages
 
 def RenderSlideshow():
+    'Renders the slideshow section of the home page, displaying the current slide and navigation controls.'
     slideshowData = LoadSlideshowData()
 
     if 'home_slideshow_index' not in st.session_state: st.session_state['home_slideshow_index'] = 0
@@ -140,17 +153,18 @@ def RenderSlideshow():
     currentSlide = slideshowData[currentIndex]
 
     imageColumn, captionColumn = st.columns([3, 2])
-    with imageColumn  : st.markdown(SlideImageHtml(currentSlide['base64'], animationClass='home-enter-delay-2'), unsafe_allow_html=True)
-    with captionColumn: st.markdown(SlideCaptionHtml(currentSlide['display_name'], currentSlide['caption'], animationClass='home-enter-delay-2'), unsafe_allow_html=True)
+    with imageColumn           : st.markdown(SlideImageHtml(currentSlide['base64'], animationClass='home-enter-delay-2'), unsafe_allow_html=True)
+    with captionColumn         : st.markdown(SlideCaptionHtml(currentSlide['display_name'], currentSlide['caption'], animationClass='home-enter-delay-2'), unsafe_allow_html=True)
 
     st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
 
     previousColumn, counterColumn, nextColumn = st.columns([1, 2, 1])
-    with previousColumn: st.button('◀', key='home_slide_prev', type='secondary', use_container_width=True, on_click=PreviousSlide, args=(len(slideshowData),))
-    with counterColumn : st.markdown(SlideCounterHtml(currentIndex + 1, len(slideshowData), animationClass='home-enter-delay-2'), unsafe_allow_html=True)
-    with nextColumn    : st.button('▶', key='home_slide_next', type='secondary', use_container_width=True, on_click=NextSlide, args=(len(slideshowData),))
+    with previousColumn                       : st.button('◀', key='home_slide_prev', type='secondary', use_container_width=True, on_click=PreviousSlide, args=(len(slideshowData),))
+    with counterColumn                        : st.markdown(SlideCounterHtml(currentIndex + 1, len(slideshowData), animationClass='home-enter-delay-2'), unsafe_allow_html=True)
+    with nextColumn                           : st.button('▶', key='home_slide_next', type='secondary', use_container_width=True, on_click=NextSlide, args=(len(slideshowData),))
 
 def RenderSlideshowWithFragment():
+    'Renders the slideshow using a fragment if available, otherwise renders normally.'
     fragmentDecorator = getattr(st, 'fragment', None)
     if fragmentDecorator is not None:
         fragmentDecorator(RenderSlideshow)()
@@ -158,6 +172,7 @@ def RenderSlideshowWithFragment():
     RenderSlideshow()
 
 def RenderMap(cities, animate=True):
+    'Renders a map with markers for the specified cities, applying optional animation for entering elements.'
     map = folium.Map(location=[42.5, 12.5], zoom_start=5, tiles='CartoDB positron', prefer_canvas=True)
 
     for _, row in cities.iterrows():
@@ -173,7 +188,7 @@ def RenderHomeContent(cities):
     st.session_state['_home_entered'] = True
     RenderPageStyles(animate=animate)
 
-    viewportWidth = Configuration.ResponsiveViewportWidth
+    viewportWidth             = Configuration.ResponsiveViewportWidth
     if viewportWidth <= 1300  : leftSectionGap = f"{Configuration.ScalePx(65)}px"
     elif viewportWidth <= 1380: leftSectionGap = f"{Configuration.ScalePx(120)}px"
     else                      : leftSectionGap = Configuration.Spacing6B
@@ -182,13 +197,11 @@ def RenderHomeContent(cities):
     else                      : rightSectionGap = Configuration.Spacing3
 
     colLeft, colRight = st.columns([1.2, 1])
-
-    with colLeft:
+    with colLeft      :
         RenderWhoWeAre()
         st.markdown(f'<div style="height: {leftSectionGap};"></div>', unsafe_allow_html=True)
         RenderSlideshowWithFragment()
-
-    with colRight:
+    with colRight     :
         RenderHowItWorks()
         st.markdown(f'<div style="height: {rightSectionGap};"></div>', unsafe_allow_html=True)
         RenderMap(cities, animate=animate)

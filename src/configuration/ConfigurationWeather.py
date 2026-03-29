@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os 
 
 # Conversions
-DbSafeMetricNameMap = {'PrecipitationProbability': 'PrecipitationProb'}
+DbSafeMetricNameMap   = {'PrecipitationProbability': 'PrecipitationProb'}
 
 # API Calls
 MaxRetries            = 4

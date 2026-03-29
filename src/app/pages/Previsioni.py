@@ -14,6 +14,7 @@ import configuration.ConfigurationStreamlit as Configuration
 
 # CSS Templates
 def PageStylesCss(animate=True):
+    'Returns CSS styles for the forecast page, with optional animation for entering elements.'
     if animate:
         enterItemCss = f'opacity: 0; transform: translateY(28px); animation: forecastEnterUp {Configuration.AnimationDuration} {Configuration.AnimationEasing} forwards; will-change: opacity, transform;'
         delay1Css    = f'animation-delay: {Configuration.AnimationDelay1};'
@@ -24,10 +25,7 @@ def PageStylesCss(animate=True):
 
     return f"""<style>
         /* ── Blocca auto-dark del browser: i colori custom restano uguali per tutti ── */
-        :root, html, body, [data-testid="stApp"] {{
-            color-scheme: dark !important;
-            forced-color-adjust: none !important;
-        }}
+        :root, html, body, [data-testid="stApp"] {{color-scheme: dark !important; forced-color-adjust: none !important;}}
 
         .forecast-enter-item    {{ {enterItemCss} }}
         .forecast-enter-delay-1 {{ {delay1Css} }}
@@ -88,6 +86,8 @@ def PageStylesCss(animate=True):
         div[data-baseweb="popover"] [role="option"],
         div[data-baseweb="popover"] [role="option"] * {{font-size: {Configuration.FontSize1} !important; font-family: {Configuration.FontFamily} !important;}}
         div[data-baseweb="popover"] [role="option"] {{min-height: 20px !important; margin: 0 !important;}}
+        div[data-baseweb="menu"] [role="option"] {{font-weight: {Configuration.FontWeight4} !important; font-size: {Configuration.FontSize10} !important;}}
+        div[data-baseweb="menu"] [role="option"][aria-label^="\2003"] {{font-weight: {Configuration.FontWeight1} !important; font-size: {Configuration.FontSize1} !important;}}
         div[data-baseweb="menu"] li:hover {{background: rgba(255,255,255,0.09) !important;}}
 
         /* ── Calendario date picker ── */
@@ -111,6 +111,7 @@ def PageStylesCss(animate=True):
     </style>"""
 
 def ParameterFilterCss():
+    'Returns CSS styles for the parameter filter radio buttons, customizing their appearance and layout.'
     return f"""<style>
         div[data-testid="stRadio"] > label {{display: none !important;}}
         div[data-testid="stRadio"] div[role="radiogroup"] {{display: flex !important; flex-wrap: wrap !important; gap: 6px !important;}}
@@ -125,6 +126,7 @@ def ParameterFilterCss():
     </style>"""
 
 def TitleCss():
+    'Returns CSS styles for the fixed title on the forecast page, adjusting position based on sidebar state.'
     return f"""<style>
         .previsioni-title-fixed {{
             position: fixed; top: {Configuration.TitleTopPx}; left: {Configuration.TitleLeftCollapsedPx};
@@ -138,6 +140,7 @@ def TitleCss():
     </style><div class="previsioni-title-fixed">Previsioni</div>"""
 
 def AlertCss():
+    'Returns CSS styles for alert components on the forecast page, customizing their appearance.'
     return f"""<style>
         div[data-testid="stAlert"] {{background-color: {Configuration.Palette1VeryDark} !important; border: none !important; border-radius: {Configuration.RadiusButton}px !important; box-shadow: none !important; outline: none !important;}}
         div[data-testid="stAlert"] > * {{background-color: {Configuration.Palette1VeryDark} !important; border: none !important; border-radius: {Configuration.RadiusButton}px !important; outline: none !important;}}
@@ -146,6 +149,7 @@ def AlertCss():
     </style>"""
 
 def TableCss():
+    'Returns CSS styles for tables on the forecast page, customizing their appearance and layout.'
     return f"""<style>
         /* Container con Scroll e Bordo Arrotondato */
         .scrollable-table-container {{max-height: {Configuration.HeightGraph}px; overflow-y: auto; overflow-x: hidden; border-radius: {Configuration.Spacing3} !important; border: {Configuration.WidthBorder}px solid rgba(255, 255, 255, 0.1); background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);}}
@@ -163,6 +167,7 @@ def TableCss():
     </style>"""
 
 def ConciergeCSS():
+    'Returns CSS styles for the concierge response container on the forecast page, customizing its appearance and layout.'
     st.markdown(f"""<style>
     /* ── Container risposta LLM ── */
     .concierge-container {{height: {Configuration.HeightGraph}px !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 14px 16px !important; background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(10px) !important; border-radius: {Configuration.Spacing3} !important; border: {Configuration.WidthBorder}px solid rgba(0, 111, 96, 0) !important; margin-top: {Configuration.Spacing1} !important; box-sizing: border-box !important;}}
@@ -218,27 +223,28 @@ def ConciergeCSS():
     </style>""", unsafe_allow_html=True)
 
 def RenderConciergeMarkdownContainer(text):
+    'Takes raw markdown text, normalizes it for consistent formatting, and renders it as HTML within a styled container.'
     normalizedText = (text or '').replace('\r\n', '\n').replace('\r', '\n')
     normalizedText = re.sub(r'(?<=\S)\s+(?=[*+]\s)', '\n', normalizedText)
     normalizedText = re.sub(r'(?<=\S)\s+(?=\d+\.\s)', '\n', normalizedText)
     normalizedText = re.sub(r'(^|\n)([*+-])(?=\S)', r'\1\2 ', normalizedText)
 
-    dayPartLabels = {'Mattina', 'Pranzo', 'Pomeriggio', 'Cena', 'Sera', 'Notte', 'Sera/Notte'}
-    structuredLines = []
-    insideDayPartSection = False
+    dayPartLabels         = {'Mattina', 'Pranzo', 'Pomeriggio', 'Cena', 'Sera', 'Notte', 'Sera/Notte'}
+    structuredLines       = []
+    insideDayPartSection  = False
     lastNestedBulletIndex = None
     for rawLine in normalizedText.split('\n'):
-        line = rawLine.rstrip()
+        line         = rawLine.rstrip()
         strippedLine = line.strip()
-        bulletMatch = re.match(r'^(?:[*+-]|\d+\.)\s+(.*)$', strippedLine)
+        bulletMatch  = re.match(r'^(?:[*+-]|\d+\.)\s+(.*)$', strippedLine)
 
         if bulletMatch:
-            itemText = bulletMatch.group(1).strip()
+            itemText  = bulletMatch.group(1).strip()
             itemLabel = itemText.rstrip(':').strip()
             if itemLabel in dayPartLabels:
-                suffix = ':' if itemText.endswith(':') else ''
+                suffix                = ':' if itemText.endswith(':') else ''
                 structuredLines.append(f'* **{itemLabel}**{suffix}')
-                insideDayPartSection = True
+                insideDayPartSection  = True
                 lastNestedBulletIndex = None
             elif insideDayPartSection:
                 structuredLines.append(f'    * {itemText}')
@@ -253,30 +259,26 @@ def RenderConciergeMarkdownContainer(text):
             continue
 
         structuredLines.append(line)
-        if not strippedLine:
-            lastNestedBulletIndex = None
-        elif strippedLine.startswith(('#', '_')):
-            lastNestedBulletIndex = None
+        if not strippedLine: lastNestedBulletIndex = None
+        elif strippedLine.startswith(('#', '_')): lastNestedBulletIndex = None
         else:
-            insideDayPartSection = False
+            insideDayPartSection  = False
             lastNestedBulletIndex = None
 
-    normalizedText = '\n'.join(structuredLines)
-
-    normalizedLines = []
+    normalizedText         = '\n'.join(structuredLines)
+    normalizedLines        = []
     previousMeaningfulLine = ''
     for rawLine in normalizedText.split('\n'):
-        line = rawLine.rstrip()
+        line         = rawLine.rstrip()
         strippedLine = line.strip()
-        isBlank = strippedLine == ''
-        isHeading = strippedLine.startswith('#')
-        isListItem = bool(re.match(r'^(?:[*+-]\s|\d+\.\s)', strippedLine))
+        isBlank      = strippedLine == ''
+        isHeading    = strippedLine.startswith('#')
+        isListItem   = bool(re.match(r'^(?:[*+-]\s|\d+\.\s)', strippedLine))
 
         if isHeading and normalizedLines and normalizedLines[-1] != '': normalizedLines.append('')
 
-        if isListItem and previousMeaningfulLine and not re.match(r'^(?:[*+-]\s|\d+\.\s|#)', previousMeaningfulLine):
+        if isListItem and previousMeaningfulLine and not re.match(r'^(?:[*+-]\s|\d+\.\s|#)', previousMeaningfulLine): 
             if normalizedLines and normalizedLines[-1] != '': normalizedLines.append('')
-
         if not isListItem and previousMeaningfulLine and re.match(r'^(?:[*+-]\s|\d+\.\s)', previousMeaningfulLine) and not isBlank:
             if normalizedLines and normalizedLines[-1] != '': normalizedLines.append('')
 
@@ -285,17 +287,18 @@ def RenderConciergeMarkdownContainer(text):
         if not isBlank: previousMeaningfulLine = strippedLine
 
     normalizedText = '\n'.join(normalizedLines)
-
-    safeText     = html.escape(normalizedText)
-    renderedHtml = markdown.markdown(safeText, extensions=['extra', 'sane_lists'])
+    safeText       = html.escape(normalizedText)
+    renderedHtml   = markdown.markdown(safeText, extensions=['extra', 'sane_lists'])
     return f'<div class="concierge-container">{renderedHtml}</div>'
 
 # Title
 def RenderTitle():
+    'Renders a fixed title on the forecast page with specific styling and positioning.'
     st.markdown(TitleCss(), unsafe_allow_html=True)
 
 # Parameter Filter
 def RenderParameterFilter():
+    'Renders a radio button filter for selecting a meteorological phenomenon, applying custom CSS for styling.'
     st.markdown(ParameterFilterCss(), unsafe_allow_html=True)
     st.markdown('<div class="filters-section-title">Seleziona un fenomeno meteorologico:</div>', unsafe_allow_html=True)
     selectedParameter = st.radio('Parametro', options=Configuration.Parameters, horizontal=True, index=0, key='accuracy_parameter_filter', label_visibility='collapsed')
@@ -303,26 +306,15 @@ def RenderParameterFilter():
 
 # Value Filters
 def RenderCitySelectbox(city):
+    'Renders a selectbox for choosing a city, organized by state, with custom styling and formatting.'
     cityOptions = city.sort_values(['State', 'City'])
     treeOptions = [None]
     treeLabels  = {None: 'Seleziona città'}
 
-    def ToUnicodeBold(text):
-        upperOffset = ord('𝐀') - ord('A')
-        lowerOffset = ord('𝐚') - ord('a')
-        digitOffset = ord('𝟎') - ord('0')
-        chars = []
-        for char in str(text):
-            if 'A' <= char <= 'Z': chars.append(chr(ord(char) + upperOffset))
-            elif 'a' <= char <= 'z': chars.append(chr(ord(char) + lowerOffset))
-            elif '0' <= char <= '9': chars.append(chr(ord(char) + digitOffset))
-            else: chars.append(char)
-        return ''.join(chars)
-
     for state, group in cityOptions.groupby('State', sort=True):
-        regionKey = f'__region__{state}'
+        regionKey             = f'__region__{state}'
         treeOptions.append(regionKey)
-        treeLabels[regionKey] = ToUnicodeBold(state)
+        treeLabels[regionKey] = state
         for _, row in group.iterrows():
             key             = f'__city__{row["Id"]}'
             treeOptions.append(key)
@@ -332,6 +324,7 @@ def RenderCitySelectbox(city):
     return (int(citySelectedKey.replace('__city__', '')) if citySelectedKey and citySelectedKey.startswith('__city__') else None)
 
 def RenderDateRangeInput(forecasts):
+    'Renders a date range input for filtering forecasts, with dynamic minimum and maximum dates based on the forecast data.'
     today           = pd.Timestamp.now(tz='Europe/Rome').date()
     nextWeek        = (pd.Timestamp(today) + pd.Timedelta(days=6)).date()
     forecastsDt     = pd.to_datetime(forecasts['Datetime'], errors='coerce')
@@ -340,44 +333,43 @@ def RenderDateRangeInput(forecasts):
     return st.date_input('Intervallo date', value=(today, nextWeek), min_value=minForecastDate, max_value=maxForecastDate, key='filterDate', label_visibility='collapsed', format='DD/MM/YYYY')
 
 def RenderPartOfDayMultiselect(calendar):
+    'Renders a multiselect input for choosing parts of the day, with options translated to Italian.'
     partOfDayOptionsENRaw = calendar['PartOfDay'].unique()
     partOfDayOptionsEN    = [p for p in Configuration.PartOfDayOrder if p in partOfDayOptionsENRaw]
     partOfDayOptionsIT    = [Configuration.PartOfDayToIta.get(p, p) for p in partOfDayOptionsEN]
-
-    partOfDaySelectedIT = st.multiselect('Parte del giorno', options=partOfDayOptionsIT, default=[], placeholder='Tutte', key='filterPartOfDay', label_visibility='collapsed')
+    partOfDaySelectedIT   = st.multiselect('Parte del giorno', options=partOfDayOptionsIT, default=[], placeholder='Tutte', key='filterPartOfDay', label_visibility='collapsed')
+    
     return (None if not partOfDaySelectedIT else [Configuration.PartOfDayToEng.get(v, v) for v in partOfDaySelectedIT])
 
 def RenderProviderMultiselect(forecasts):
+    'Renders a multiselect input for choosing providers, with options sorted alphabetically.'
     providerOptions     = sorted(forecasts['Provider'].unique())
     providerSelectedRaw = st.multiselect('Provider', options=providerOptions, default=[], placeholder='Tutte', key='filterProvider', label_visibility='collapsed')
     return None if not providerSelectedRaw else providerSelectedRaw
 
 def RenderRetrievalDateSelectbox(forecasts):
+    'Renders a selectbox for choosing the forecast retrieval date, with options sorted in reverse chronological order and formatted as Italian dates.'
     retrievalDates = sorted(pd.to_datetime(forecasts['RetrievalDatetime'].unique()), reverse=True)
     return st.selectbox('Data Previsione', options=retrievalDates, format_func=lambda d: d.strftime('%d/%m/%Y'), index=0, key='filterRetrievalTime', label_visibility='collapsed')
 
 def RenderValueFilters(city, calendar, forecasts, animate=True):
+    'Renders a set of filters for selecting city, date range, part of day, provider, and retrieval date, applying custom CSS for styling and layout.'
     st.markdown(PageStylesCss(animate=animate), unsafe_allow_html=True)
     st.markdown("<div class='filters-section-title'>Scegli cosa prevedere:</div>", unsafe_allow_html=True)
 
-    columns = st.columns([2, 2, 2, 2, 2])
-
+    columns        = st.columns([2, 2, 2, 2, 2])
     with columns[0]:
         st.markdown("<div class='filter-label'>Città</div>", unsafe_allow_html=True)
         cityIdSelected = RenderCitySelectbox(city)
-
     with columns[1]:
         st.markdown("<div class='filter-label'>Intervallo date</div>", unsafe_allow_html=True)
         dateSelected = RenderDateRangeInput(forecasts)
-
     with columns[2]:
         st.markdown("<div class='filter-label'>Parte del giorno</div>", unsafe_allow_html=True)
         partOfDaySelected = RenderPartOfDayMultiselect(calendar)
-
     with columns[3]:
         st.markdown("<div class='filter-label'>Provider</div>", unsafe_allow_html=True)
         providerSelected = RenderProviderMultiselect(forecasts)
-
     with columns[4]:
         st.markdown("<div class='filter-label'>Data previsione</div>", unsafe_allow_html=True)
         retrievalTimeSelected = RenderRetrievalDateSelectbox(forecasts)
@@ -385,12 +377,14 @@ def RenderValueFilters(city, calendar, forecasts, animate=True):
     return {'cityId': cityIdSelected, 'dateRange': dateSelected, 'partOfDay': partOfDaySelected, 'provider': providerSelected, 'retrievalDatetime': retrievalTimeSelected}
 
 def RenderNoCityAlert():
+    'Renders an alert message when no city is selected.'
     st.markdown(AlertCss(), unsafe_allow_html=True)
     st.info('📍 Seleziona una città per visualizzare le previsioni')
     st.stop()
 
 # Data Helpers
 def BuildDf(city, calendar, forecasts):
+    'Builds a merged DataFrame from city, calendar, and forecasts data, dropping unnecessary columns.'
     calendar.drop(columns=['CreatedAt', 'UpdatedAt'], inplace=True, errors='ignore')
     city.drop(columns=['Province', 'Country', 'Region', 'Latitude', 'Longitude', 'CreatedAt', 'UpdatedAt'], inplace=True, errors='ignore')
     forecasts.drop(columns=['Id', 'CreatedAt', 'UpdatedAt'], inplace=True, errors='ignore')
@@ -399,6 +393,7 @@ def BuildDf(city, calendar, forecasts):
     return forecasts
 
 def FilterDf(df, selectedFilters):
+    'Applies a series of filters to the DataFrame based on the selected criteria for city, part of day, provider, retrieval datetime, and date range.'
     if selectedFilters['cityId'] is not None           : df = df[df['CityId'] == selectedFilters['cityId']]
     if selectedFilters['partOfDay'] is not None        : df = df[df['PartOfDay'].isin(selectedFilters['partOfDay'])]
     if selectedFilters['provider'] is not None         : df = df[df['Provider'].isin(selectedFilters['provider'])]
@@ -412,16 +407,19 @@ def FilterDf(df, selectedFilters):
     return df.reset_index(drop=True)
 
 def FilterAccuracyByProvider(df, selectedFilters):
+    'Filters the accuracy DataFrame based on the selected provider(s).'
     if selectedFilters['provider'] is not None : df = df[df['Provider'].isin(selectedFilters['provider'])]
     return df.reset_index(drop=True)
 
 # Graph
 def HexToRgb(hex):
+    'Converts a hexadecimal color code to an RGB string format.'
     hex     = hex.lstrip('#')
     r, g, b = int(hex[0:2], 16), int(hex[2:4], 16), int(hex[4:6], 16)
     return f'{r},{g},{b}'
 
 def InterpolateColor(hexA, hexB, t):
+    'Interpolates between two hexadecimal colors based on a parameter t (0 to 1) and returns the resulting color in hexadecimal format.'
     hexA, hexB = hexA.lstrip('#'), hexB.lstrip('#')
     rA, gA, bA = int(hexA[0:2], 16), int(hexA[2:4], 16), int(hexA[4:6], 16)
     rB, gB, bB = int(hexB[0:2], 16), int(hexB[2:4], 16), int(hexB[4:6], 16)
@@ -431,13 +429,15 @@ def InterpolateColor(hexA, hexB, t):
     return f'#{r:02x}{g:02x}{b:02x}'
 
 def PaletteColor(t, palette=[Configuration.Palette1VeryDark, Configuration.Palette1Dark, Configuration.Palette1Medium, Configuration.Palette1Light, Configuration.Palette1VeryLight]):
-        t     = max(0.0, min(1.0, t))
-        idx   = t * (len(palette) - 1)
-        iLow  = int(idx)
-        iHigh = min(iLow + 1, len(palette) - 1)
-        return InterpolateColor(palette[iLow], palette[iHigh], idx - iLow)
+    'Generates a color from a palette based on a normalized value t (0 to 1), interpolating between colors if necessary.'
+    t     = max(0.0, min(1.0, t))
+    idx   = t * (len(palette) - 1)
+    iLow  = int(idx)
+    iHigh = min(iLow + 1, len(palette) - 1)
+    return InterpolateColor(palette[iLow], palette[iHigh], idx - iLow)
 
 def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate=True):
+    'Renders a forecast line chart for the selected parameter, applying filters and animation settings.'
     animationClass = 'forecast-enter-delay-1' if animate else ''
     
     column = Configuration.ParametersEng2.get(selectedParameter)
@@ -457,7 +457,7 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
     accuracySubset['Weight'] = accuracySubset['Weight'] / totalWeight
     weights                  = accuracySubset.set_index('Provider')['Weight'].to_dict()
     if weights: df['_weight'] = df['Provider'].map(weights).fillna(0)
-    else:       df['_weight'] = 1.0
+    else      : df['_weight'] = 1.0
   
     df                    = df.drop_duplicates(subset=['Datetime', 'Provider'])
     df['_weighted_value'] = df[column] * df['_weight']
@@ -470,18 +470,17 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
     valueMax        = aggregated['Value'].max()    
     normalizedValue = lambda value: (value - valueMin) / (valueMax - valueMin) if valueMax > valueMin else 0.5
 
-    st.markdown(f"<div class='chart-title forecast-enter-item {animationClass}'>{selectedParameter}</div>"
-                f"<div class='chart-subtitle forecast-enter-item {animationClass}'>Andamento previsto</div>"
-                f"<div class='chart-subtitle forecast-enter-item {animationClass}'>Selezionare un'area per effettuare lo zoom a livello orario - Doppio tap per ripristinare lo zoom al livello base</div>", unsafe_allow_html=True)
+    st.markdown(f"""<div class='chart-title forecast-enter-item {animationClass}'>{selectedParameter}</div><div class='chart-subtitle forecast-enter-item {animationClass}'>Andamento previsto</div>
+                <div class='chart-subtitle forecast-enter-item {animationClass}'>Selezionare un'area per effettuare lo zoom a livello orario - Doppio tap per ripristinare lo zoom al livello base</div>""", unsafe_allow_html=True)
 
-    figure = go.Figure()
+    figure    = go.Figure()
     lowColor  = PaletteColor(0.05)
     midColor  = PaletteColor(0.50)
     highColor = PaletteColor(0.95)
 
     for i in range(len(aggregated) - 1):
-        valueMid  = (aggregated['Value'].iloc[i] + aggregated['Value'].iloc[i+1]) / 2
-        color     = PaletteColor(normalizedValue(valueMid))
+        valueMid       = (aggregated['Value'].iloc[i] + aggregated['Value'].iloc[i+1]) / 2
+        color          = PaletteColor(normalizedValue(valueMid))
         figure.add_trace(go.Scatter(
             x          = [aggregated['Datetime'].iloc[i], aggregated['Datetime'].iloc[i+1], aggregated['Datetime'].iloc[i+1], aggregated['Datetime'].iloc[i]],
             y          = [aggregated['Value'].iloc[i], aggregated['Value'].iloc[i+1], 0, 0],
@@ -498,31 +497,34 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
         line          = dict(color='rgba(0,0,0,0)', width=0),
         customdata    = aggregated['ProviderInfo'],
         hovertemplate = (
-            f'<span style="color:{Configuration.WhiteColor};">{selectedParameter}:&nbsp;<b>%{{y:.1f}}{unit}</b></span><br>'
-            f'<br>'
-            f'<span style="color:rgba(255,255,255,0.6);font-size:11px;">%{{customdata}}</span>'
-            f'<extra></extra>'),
+            f"""<span style="color:{Configuration.WhiteColor};">{selectedParameter}:&nbsp;<b>%{{y:.1f}}{unit}</b></span><br>
+            <br><span style="color:rgba(255,255,255,0.6);font-size:11px;">%{{customdata}}</span><extra></extra>"""),
         showlegend    = False))
 
-    # Tracce dedicate alla legenda: spiegano la scala cromatica dell'area.
     figure.add_trace(go.Scatter(
-        x=[None], y=[None], mode='markers',
-        marker=dict(size=9, color=f'rgba({HexToRgb(lowColor)}, 0.75)', symbol='square'),
-        name='Valore basso',
-        showlegend=True,
-        hoverinfo='skip'))
+        x          = [None], 
+        y          = [None], 
+        mode       = 'markers',
+        marker     = dict(size=9, color=f'rgba({HexToRgb(lowColor)}, 0.75)', symbol='square'),
+        name       = 'Valore basso',
+        showlegend = True,
+        hoverinfo  = 'skip'))
     figure.add_trace(go.Scatter(
-        x=[None], y=[None], mode='markers',
-        marker=dict(size=9, color=f'rgba({HexToRgb(midColor)}, 0.75)', symbol='square'),
-        name='Valore medio',
-        showlegend=True,
-        hoverinfo='skip'))
+        x          = [None], 
+        y          = [None], 
+        mode       = 'markers',
+        marker     = dict(size=9, color=f'rgba({HexToRgb(midColor)}, 0.75)', symbol='square'),
+        name       = 'Valore medio',
+        showlegend = True,
+        hoverinfo  = 'skip'))
     figure.add_trace(go.Scatter(
-        x=[None], y=[None], mode='markers',
-        marker=dict(size=9, color=f'rgba({HexToRgb(highColor)}, 0.75)', symbol='square'),
-        name='Valore alto',
-        showlegend=True,
-        hoverinfo='skip'))
+        x          = [None], 
+        y          = [None], 
+        mode       = 'markers',
+        marker     = dict(size=9, color=f'rgba({HexToRgb(highColor)}, 0.75)', symbol='square'),
+        name       = 'Valore alto',
+        showlegend = True,
+        hoverinfo  = 'skip'))
 
     figure.update_layout(
         paper_bgcolor        = f'rgba({HexToRgb(Configuration.AccentColor)}, 0.04)',
@@ -550,6 +552,7 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
 
 # Table
 def GroupDf(df):
+    'Groups the DataFrame by date and part of day, calculating the mean of specified weather parameters for each group.'
     df['Datetime'] = pd.to_datetime(df['Datetime']).dt.normalize()
     groupByColumns = ['Datetime', 'PartOfDay']
     valueColumn    = ['Temperature', 'FeltTemperature', 'Humidity', 'Visibility', 'PrecipitationProbability', 'Rain', 'Snowfall', 'CloudCover', 'WindSpeed']
@@ -557,7 +560,8 @@ def GroupDf(df):
     return df
 
 def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
-    month = row['Datetime'].month
+    'Applies seasonal logic to calculate comfort scores based on weather parameters, using different thresholds for each season and combining them into a final score.'
+    month                      = row['Datetime'].month
     if month in [6, 7, 8]      : p = Configuration.ThresholdsSummer
     elif month in [12, 1, 2]   : p = Configuration.ThresholdsWinter
     elif month in [3, 4, 5]    : p = Configuration.ThresholdsSpring
@@ -574,10 +578,10 @@ def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
     scorePrecipitationProbability = scorePrecipitationProbability**p['PrecipitationPenaltyExp']
     scoreRain                     = scoreRain**p['RainPenaltyExp']
 
-    comfortScore   = (scoreFeltTemperature * weights['ScoreFeltTemperature'] + scoreCloudCover * weights['ScoreCloudCover'] + scorePrecipitationProbability * weights['ScorePrecipitationProbability'] + scoreWind * weights['ScoreWind'] + scoreVisibility * weights['ScoreVisibility'] + scoreHumidity * weights['ScoreHumidity'])
-    weatherBlocker = min(scoreRain, scoreSnowfall)
+    comfortScore     = (scoreFeltTemperature * weights['ScoreFeltTemperature'] + scoreCloudCover * weights['ScoreCloudCover'] + scorePrecipitationProbability * weights['ScorePrecipitationProbability'] + scoreWind * weights['ScoreWind'] + scoreVisibility * weights['ScoreVisibility'] + scoreHumidity * weights['ScoreHumidity'])
+    weatherBlocker   = min(scoreRain, scoreSnowfall)
     cloudRainPenalty = 1 - (p['CloudRainInteractionWeight'] * ((1 - scoreCloudCover) * (1 - scorePrecipitationProbability)))
-    finalScore = np.clip(comfortScore * weatherBlocker * cloudRainPenalty, 0, 1)
+    finalScore       = np.clip(comfortScore * weatherBlocker * cloudRainPenalty, 0, 1)
     
     return pd.Series({
         'ScorePrecipitationProbability': scorePrecipitationProbability,
@@ -591,15 +595,18 @@ def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
         'FinalScore'                   : round(finalScore, 2)})
 
 def CalculateScore(df):
+    'Calculates comfort scores for each row in the DataFrame by applying seasonal logic and combining the results with the original data.'
     df['Datetime'] = pd.to_datetime(df['Datetime'])
     return pd.concat([df, df.apply(ApplySeasonalLogic, axis=1)], axis=1)
 
 def GetStatus(score):
-        if score >= 0.7: return '🟢 Vai, esci!'
-        if score >= 0.4: return '🟡 Esci, ma fai attenzione'
-        return                  '🔴 Forse è meglio restare a casa?'
+    'Returns a status message based on the final comfort score, using different thresholds to determine the appropriate indication.'
+    if score >= 0.7: return '🟢 Vai, esci!'
+    if score >= 0.4: return '🟡 Esci, ma fai attenzione'
+    return                  '🔴 Forse è meglio restare a casa?'
 
 def GetMotivation(row):
+    'Provides a motivation message based on the final comfort score and the individual parameter scores, identifying the worst two parameters that contribute to an uncomfortable forecast.'
     if row['FinalScore'] >= 0.7: return ''
         
     labels = {
@@ -620,11 +627,11 @@ def GetMotivation(row):
     return ' <br> '.join(motivations)
 
 def CreateSummary(df):
-    summaryDf = df.copy()
-    weekdayNamesIt = {0: 'Lunedi', 1: 'Martedi', 2: 'Mercoledi', 3: 'Giovedi', 4: 'Venerdi', 5: 'Sabato', 6: 'Domenica'}
-
+    'Creates a summary DataFrame with formatted date, day of the week, part of the day, score, indication, and main motivation for each forecast entry.'
+    summaryDf              = df.copy()
+    weekdayNamesIt         = {0: 'Lunedi', 1: 'Martedi', 2: 'Mercoledi', 3: 'Giovedi', 4: 'Venerdi', 5: 'Sabato', 6: 'Domenica'}
     summaryDf['PartOfDay'] = pd.Categorical(summaryDf['PartOfDay'], categories=Configuration.PartOfDayOrder, ordered=True)
-    summaryDf = summaryDf.sort_values(by=['Datetime', 'PartOfDay'])
+    summaryDf              = summaryDf.sort_values(by=['Datetime', 'PartOfDay'])
 
     summaryDf['Datetime']               = pd.to_datetime(summaryDf['Datetime'])
     summaryDf['Data']                   = summaryDf['Datetime'].dt.strftime('%d/%m/%Y')
@@ -637,6 +644,7 @@ def CreateSummary(df):
     return summaryDf[['Data', 'Giorno della settimana', 'Parte del giorno', 'Punteggio', 'Indicazione', 'Motivo Principale']]
 
 def RenderForecastTable(df, animate=True):
+    'Renders a forecast summary table with specific styling and optional animation, displaying the date, day of the week, part of the day, score, indication, and main motivation for each forecast entry.'
     animationClass = 'forecast-enter-delay-1' if animate else ''
     st.markdown(TableCss(), unsafe_allow_html=True)
     summary        = CreateSummary(df)
@@ -645,6 +653,7 @@ def RenderForecastTable(df, animate=True):
 
 # LLM
 def BuildLlmModelSequence(defaultModel, fallbackModels):
+    'Builds a sequence of LLM models to try, starting with a cached model if available, followed by the default model and any fallback models, ensuring uniqueness and preserving order.'
     cachedModel   = st.session_state.get('_llm_last_successful_model')
     modelSequence = [cachedModel, defaultModel, *(fallbackModels or [])]
 
@@ -655,10 +664,12 @@ def BuildLlmModelSequence(defaultModel, fallbackModels):
     return uniqueModels
 
 def IsRetryableLlmError(error):
+    'Determines if an error from the LLM provider is retryable based on its message content, checking for common indicators of rate limiting or temporary issues.'
     errorText = str(error).lower()
     return any(token in errorText for token in ['429', 'rate limit', 'rate-limit', 'rate_limited', 'temporarily rate-limited', 'temporarily rate limited', 'too many requests', 'connection error', 'timed out', 'timeout'])
 
 def BuildFriendlyLlmError(error):
+    'Builds a user-friendly error message based on the type of error encountered when interacting with the LLM provider, providing specific guidance for retryable errors and a general message for other types of errors.'
     if IsRetryableLlmError(error): return '⚠️ Il provider AI è temporaneamente occupato. Riprova tra qualche secondo.'
     return f'⚠️ Errore nella generazione dei consigli: {str(error)}'
 
@@ -666,9 +677,10 @@ def GenerateLLMComment(cityName, staticEventsTable, summaryTable,
                        orApiKey=Configuration.OpenRouterKey, model=Configuration.ModelF, 
                        fallbackModels=Configuration.LlmFallbackModels, maxRetries=Configuration.LlmMaxRetries, retryDelaySeconds=Configuration.LlmRetryDelaySeconds,
                        systemPrompt=Configuration.LLMPrompt, maxTokens=Configuration.MaxTokens, temperature=Configuration.Temperature, topP=Configuration.TopP):   
+    'Generates a comment from the LLM based on the city name, static events, and summary table, using a specified model and handling retries for transient errors.'
     try:        
         mostCommonMotivation   = summaryTable.groupby('Indicazione')['Motivo Principale'].agg(lambda x: x.mode().iloc[0] if not x.mode().empty else 'Condizioni variabili')
-        motivationByIndication = {indication: mostCommonMotivation.get(indication, 'Condizioni variabili') for indication in summaryTable['Indicazione'].unique()}
+        motivationByIndication = {indication: mostCommonMotivation.get(indication, 'Condizioni variabili') for indication in summaryTable['Indicazione'].unique()} 
         
         filledPrompt = systemPrompt.format(city = cityName, staticEventsTable = staticEventsTable, mostCommonMotivation = motivationByIndication, outputStructureMarkdown = Configuration.LLMResponseStructure)
         client       = OpenAI(base_url='https://openrouter.ai/api/v1', api_key=orApiKey)
@@ -755,13 +767,13 @@ def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summary
     st.markdown("<div class='llm-disclaimer'><strong>Nota</strong>: il Concierge usa un modello LLM e potrebbe fornire indicazioni non corrette. Verifica sempre le informazioni prima di decidere.</div>", unsafe_allow_html=True)
 
 def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider, staticEventsTable):
-    animate = not st.session_state.get('_forecast_entered', False)
+    animate                               = not st.session_state.get('_forecast_entered', False)
     st.session_state['_forecast_entered'] = True
     
     st.markdown(PageStylesCss(animate=animate), unsafe_allow_html=True)
     ConciergeCSS()
 
-    selectedFilters = RenderValueFilters(city, calendar, forecasts, animate=animate)
+    selectedFilters                     = RenderValueFilters(city, calendar, forecasts, animate=animate)
     st.session_state['selectedFilters'] = selectedFilters
     
     st.markdown(f"<div style='height: {Configuration.Spacing2};'></div>", unsafe_allow_html=True)
@@ -772,12 +784,12 @@ def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider,
 
     if selectedFilters['cityId'] is None: RenderNoCityAlert()
 
-    forecasts    = BuildDf(city, calendar, forecasts)
-    forecasts    = FilterDf(forecasts, selectedFilters)
-    scoresTable  = CalculateScore(GroupDf(forecasts))
+    forecasts   = BuildDf(city, calendar, forecasts)
+    forecasts   = FilterDf(forecasts, selectedFilters)
+    scoresTable = CalculateScore(GroupDf(forecasts))
 
     RenderFirstPart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate)
     
     columnLeft, columnRight = st.columns([1.25, 1])
-    with columnLeft: RenderColumnLeft(animate, scoresTable)
-    with columnRight: RenderColumnRight(animate, city, selectedFilters, staticEventsTable, CreateSummary(scoresTable))
+    with columnLeft         : RenderColumnLeft(animate, scoresTable)
+    with columnRight        : RenderColumnRight(animate, city, selectedFilters, staticEventsTable, CreateSummary(scoresTable))

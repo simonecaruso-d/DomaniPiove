@@ -8,30 +8,26 @@ import configuration.ConfigurationStreamlit as Configuration
  
 # HTML Templates 
 def BestProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
+    'Builds a styled HTML line for the best provider with dynamic spacing based on viewport width for optimal readability.'
     textGap = Configuration.Spacing0B if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing1
-    return (f'<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
-            f'A {html.escape(label.lower())} di distanza, '
-            f'<span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> '
-            f'è il più affidabile con un errore medio di '
-            f'<b>{html.escape(maeFormatted)}</b>.'
-            f'</div>')
+    return (f"""<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
+            A {html.escape(label.lower())} di distanza, <span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> è il più affidabile con un errore medio di <b>{html.escape(maeFormatted)}</b>.</div>""")
 
 def WorstProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
+    'Builds a styled line for the worst provider with optional animation class. Adjusts bottom margin based on viewport width for better spacing.'
     textGap = Configuration.Spacing0B if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing1
-    return (f'<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
-            f'A {html.escape(label.lower())} di distanza, '
-            f'<span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> '
-            f'è il meno affidabile con un errore medio di '
-            f'<b>{html.escape(maeFormatted)}</b>.'
-            f'</div>')
+    return (f"""<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
+            A {html.escape(label.lower())} di distanza, <span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> è il meno affidabile con un errore medio di <b>{html.escape(maeFormatted)}</b>.</div>""")
 
 def SectionHeaderHtml(text, animationClass=''):
+    'Builds a styled section header with optional animation class. Adjusts bottom margin based on viewport width for better spacing.'
     sectionBottomGap = Configuration.Spacing1 if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing2
-    return (f'<div class="accuracy-enter-item {animationClass}" style="font-size:{Configuration.FontSize6};font-weight:{Configuration.FontWeight2};color:{Configuration.Palette2Dark};'
-            f'letter-spacing:{Configuration.LetterSpacing2}; line-height:{Configuration.LineHeight5}; margin-top: 0; margin-bottom:{sectionBottomGap};">{text}</div>')
+    return (f"""<div class="accuracy-enter-item {animationClass}" style="font-size:{Configuration.FontSize6};font-weight:{Configuration.FontWeight2};color:{Configuration.Palette2Dark};
+            letter-spacing:{Configuration.LetterSpacing2}; line-height:{Configuration.LineHeight5}; margin-top: 0; margin-bottom:{sectionBottomGap};">{text}</div>""")
 
 # CSS Templates
 def PageStylesCss(animate=True):
+    'Generates CSS styles for the accuracy page, including optional animation for entering items and responsive adjustments for radio buttons and radar tooltips.'
     if animate:
         enterItemCss = f'opacity: 0; transform: translateY(28px); animation: accuracyEnterUp {Configuration.AnimationDuration} {Configuration.AnimationEasing} forwards; will-change: opacity, transform;'
         delay1Css    = f'animation-delay: {Configuration.AnimationDelay1};'
@@ -71,6 +67,7 @@ def PageStylesCss(animate=True):
     </style>"""
 
 def TitleCss():
+    'Generates CSS for a fixed title on the accuracy page that adjusts its position based on the sidebar state, ensuring visibility and consistent styling across different screen sizes.'
     return f"""<style>
         .accuratezza-title-fixed {{
             position: fixed; top: {Configuration.TitleTopPx}; left: {Configuration.TitleLeftCollapsedPx};
@@ -85,30 +82,29 @@ def TitleCss():
  
 # Rendering Functions
 def RenderTitle():
+    'Renders the fixed title on the accuracy page.'
     st.markdown(TitleCss(), unsafe_allow_html=True)
 
 def RenderParameterFilter(parameters=Configuration.Parameters):
+    'Renders the parameter filter for selecting a meteorological phenomenon.'
     st.markdown(f'<div class="accuracy-filter-title">Seleziona un fenomeno meteorologico:</div>', unsafe_allow_html=True)
     selectedParameter = st.radio('Parametro', options=parameters, horizontal=True, index=0, key='accuracy_parameter_filter', label_visibility='collapsed')
     return selectedParameter
  
 def RenderRadar(aggregatedDf, providers, daySpans, labels, parameter, animate=True):
+    'Renders the radar chart for the selected parameter, including optional animation for entering items.'
     animationClass           = 'accuracy-enter-delay-1' if animate else ''
     N                        = len(daySpans)
     centerX, centerY, radius = Configuration.ScalePx(280), Configuration.ScalePx(260), Configuration.ScalePx(190)
     width, height            = Configuration.ScalePx(560), Configuration.ScalePx(500)
     angles                   = [2 * math.pi * i / N - math.pi / 2 for i in range(N)]
 
-    defs = (f'<defs>'
-            f'<radialGradient id="rbg" cx="50%" cy="50%" r="50%">'
-            f'<stop offset="0%" stop-color="{Configuration.Palette2Light}" stop-opacity="0.04"/>'
-            f'<stop offset="100%" stop-color="{Configuration.Palette2Dark}" stop-opacity="0.01"/>'
-            f'</radialGradient>'
-            f'<filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/>'
-            f'<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
-            f'</defs>')
+    defs       = (f"""<defs>
+                  <radialGradient id="rbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="{Configuration.Palette2Light}" stop-opacity="0.04"/><stop offset="100%" stop-color="{Configuration.Palette2Dark}" stop-opacity="0.01"/></radialGradient>
+                  <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  </defs>""")
 
-    background = f'<circle cx="{centerX}" cy="{centerY}" r="{radius + 20}" fill="url(#rbg)" />'
+    background = f"""<circle cx="{centerX}" cy="{centerY}" r="{radius + 20}" fill="url(#rbg)" />"""
 
     scale      = Configuration.ParametersScale.get(parameter, 1)
     unit       = Configuration.ParametersMeasureUnits.get(parameter, '')
@@ -121,20 +117,20 @@ def RenderRadar(aggregatedDf, providers, daySpans, labels, parameter, animate=Tr
         r         = radius * frac
         value     = maxDisplay * frac
         ringLabel = f'{value:.0f}{unit}' if scale != 1 else f'{value:.1f}{unit}'
-        rings    += f'<circle cx="{centerX}" cy="{centerY}" r="{r}" fill="none" stroke="rgba(47,72,88,0.06)" stroke-width="1" stroke-dasharray="4,4"/>'
-        rings    += (f'<text x="{centerX + 5}" y="{centerY - r + 12}" fill="rgba(47,72,88,0.28)" '
-                     f'font-size="{Configuration.FontSizeAA}" font-family="{Configuration.FontFamily}" font-weight="{Configuration.FontWeight3}">{html.escape(ringLabel)}</text>')
+        rings     += f'<circle cx="{centerX}" cy="{centerY}" r="{r}" fill="none" stroke="rgba(47,72,88,0.06)" stroke-width="1" stroke-dasharray="4,4"/>'
+        rings     += (f"""<text x="{centerX + 5}" y="{centerY - r + 12}" fill="rgba(47,72,88,0.28)" 
+                     font-size="{Configuration.FontSizeAA}" font-family="{Configuration.FontFamily}" font-weight="{Configuration.FontWeight3}">{html.escape(ringLabel)}</text>""")
 
     axes = ''
     for i, (a, lbl) in enumerate(zip(angles, labels)):
         ex, ey  = centerX + radius * math.cos(a), centerY + radius * math.sin(a)
-        axes   += f'<line x1="{centerX}" y1="{centerY}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="rgba(47,72,88,0.08)" stroke-width="1"/>'
+        axes    += f'<line x1="{centerX}" y1="{centerY}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="rgba(47,72,88,0.08)" stroke-width="1"/>'
         textX   = centerX + (radius + 30) * math.cos(a)
         textY   = centerY + (radius + 30) * math.sin(a)
         anchor  = 'start' if math.cos(a) > 0.3 else ('end' if math.cos(a) < -0.3 else 'middle')
-        axes   += (f'<text x="{textX:.1f}" y="{textY:.1f}" text-anchor="{anchor}" dominant-baseline="0.35em" '
-                   f'fill="{Configuration.Palette2Dark}" font-size="{Configuration.FontSizeA}" font-weight="{Configuration.FontWeight3}" font-family="{Configuration.FontFamily}" '
-                   f'letter-spacing="{Configuration.LetterSpacing1}">{html.escape(lbl)}</text>')
+        axes    += (f"""<text x="{textX:.1f}" y="{textY:.1f}" text-anchor="{anchor}" dominant-baseline="0.35em" 
+                   fill="{Configuration.Palette2Dark}" font-size="{Configuration.FontSizeA}" font-weight="{Configuration.FontWeight3}" font-family="{Configuration.FontFamily}" 
+                   letter-spacing="{Configuration.LetterSpacing1}">{html.escape(lbl)}</text>""")
 
     polygons = ''
     dots     = ''
@@ -149,42 +145,41 @@ def RenderRadar(aggregatedDf, providers, daySpans, labels, parameter, animate=Tr
             py     = centerY + r * math.sin(angles[i])
             points.append(f'{px:.1f},{py:.1f}')
             dotList.append((px, py, mae, prov))
-        polygons += (f'<polygon points="{" ".join(points)}" fill="none" '
-                     f'stroke="{color}" stroke-width="2.5" stroke-linejoin="round" '
-                     f'opacity="{Configuration.Opacity2}" filter="url(#glow)">'
-                     f'<animate attributeName="opacity" from="0" to="{Configuration.Opacity2}" dur="0.6s" fill="freeze"/>'
-                     f'</polygon>')
+        polygons += (f"""<polygon points="{" ".join(points)}" fill="none" 
+                     stroke="{color}" stroke-width="2.5" stroke-linejoin="round" 
+                     opacity="{Configuration.Opacity2}" filter="url(#glow)">
+                     <animate attributeName="opacity" from="0" to="{Configuration.Opacity2}" dur="0.6s" fill="freeze"/>
+                     </polygon>""")
         for (px, py, mae, provName) in dotList:
             tipText = f'{html.escape(provName)}: {html.escape(FormatMaeValue(mae, parameter))}'
             tipW    = max(len(tipText) * 6.5, 64)
-            dots   += (f'<g class="radar-dot-g">'
-                       f'<circle cx="{px:.1f}" cy="{py:.1f}" r="6" fill="{color}" stroke="#fff" stroke-width="2.5" '
-                       f'filter="url(#glow)" class="radar-dot"/>'
-                       f'<circle cx="{px:.1f}" cy="{py:.1f}" r="16" fill="transparent" class="radar-dot-hover"/>'
-                       f'<g class="radar-tooltip" opacity="0" pointer-events="none">'
-                       f'<rect x="{px - tipW/2:.1f}" y="{py - 34:.1f}" width="{tipW:.0f}" height="22" rx="8" '
-                       f'fill="{color}" opacity="0.92"/>'
-                       f'<text x="{px:.1f}" y="{py - 20:.1f}" text-anchor="middle" fill="#fff" '
-                       f'font-size="{Configuration.FontSizeA}" font-weight="{Configuration.FontWeight4}" font-family="{Configuration.FontFamily}">{tipText}</text>'
-                       f'</g></g>')
+            dots    += (f"""<g class="radar-dot-g">
+                       <circle cx="{px:.1f}" cy="{py:.1f}" r="6" fill="{color}" stroke="#fff" stroke-width="2.5" 
+                       filter="url(#glow)" class="radar-dot"/>
+                       <circle cx="{px:.1f}" cy="{py:.1f}" r="16" fill="transparent" class="radar-dot-hover"/>
+                       <g class="radar-tooltip" opacity="0" pointer-events="none">
+                       <rect x="{px - tipW/2:.1f}" y="{py - 34:.1f}" width="{tipW:.0f}" height="22" rx="8" 
+                       fill="{color}" opacity="0.92"/>
+                       <text x="{px:.1f}" y="{py - 20:.1f}" text-anchor="middle" fill="#fff" 
+                       font-size="{Configuration.FontSizeA}" font-weight="{Configuration.FontWeight4}" font-family="{Configuration.FontFamily}">{tipText}</text>
+                       </g></g>""")
 
     providerLegend = ' &nbsp;·&nbsp; '.join(f'<span style="color:{Configuration.Palette2ByProvider[pi % len(Configuration.Palette2ByProvider)]};">■</span> {html.escape(prov)}' for pi, prov in enumerate(providers))
-    title = (f'<div class="accuracy-enter-item {animationClass}" style="text-align:center;margin-bottom:{Configuration.Spacing0B};">'
-             f'<div style="font-size:{Configuration.FontSize6};font-weight:{Configuration.FontWeight2};line-height:{Configuration.LineHeight5};color:{Configuration.Palette2Dark};letter-spacing:{Configuration.LetterSpacing2};">'
-             f'Errore assoluto medio per provider</div>'
-             f'<div style="font-size:{Configuration.FontSize1};font-weight:{Configuration.FontWeight1};color:{Configuration.Palette2VeryLight};margin-top:{Configuration.Spacing0B};line-height:{Configuration.LineHeight1};">'
-             f'{providerLegend}</div></div>')
-
-    svg = (f'<svg class="accuracy-enter-item {animationClass}" viewBox="0 0 {width} {height}" width="100%" '
-           f'style="max-width:620px;margin:0 auto;display:block;">'
-           f'{defs}{background}{rings}{axes}{polygons}{dots}</svg>')
+    title          = (f"""<div class="accuracy-enter-item {animationClass}" style="text-align:center;margin-bottom:{Configuration.Spacing0B};">
+                      <div style="font-size:{Configuration.FontSize6};font-weight:{Configuration.FontWeight2};line-height:{Configuration.LineHeight5};color:{Configuration.Palette2Dark};letter-spacing:{Configuration.LetterSpacing2};">
+                      Errore assoluto medio per provider</div>
+                      <div style="font-size:{Configuration.FontSize1};font-weight:{Configuration.FontWeight1};color:{Configuration.Palette2VeryLight};margin-top:{Configuration.Spacing0B};line-height:{Configuration.LineHeight1};">
+                      {providerLegend}</div></div>""")
+    svg            = (f"""<svg class="accuracy-enter-item {animationClass}" viewBox="0 0 {width} {height}" width="100%" 
+                      style="max-width:620px;margin:0 auto;display:block;">{defs}{background}{rings}{axes}{polygons}{dots}</svg>""")
 
     st.markdown(title + svg, unsafe_allow_html=True)
 
 def RenderBestProviderSummary(aggregatedDf, daySpans, labels, parameter, animate=True):
+    'Renders the summary of the best and worst providers for each day span, including optional animation.'
     animationClass = 'accuracy-enter-delay-2' if animate else ''
-    bestLines  = []
-    worstLines = []
+    bestLines      = []
+    worstLines     = []
     
     isTightLaptopViewport = Configuration.ResponsiveViewportWidth <= 1366
     gapBetweenSections    = Configuration.Spacing3 if isTightLaptopViewport else Configuration.Spacing6
@@ -207,11 +202,14 @@ def RenderBestProviderSummary(aggregatedDf, daySpans, labels, parameter, animate
 
 # Data Helpers
 def FormatMaeValue(maeValue, selectedParameter):
+    'Formats the MAE value for display, applying the appropriate scale and unit based on the selected parameter.'
     scale = Configuration.ParametersScale.get(selectedParameter, 1)
     unit  = Configuration.ParametersMeasureUnits.get(selectedParameter, '')
+    
     return f'{maeValue * scale:.2f}{unit}'
  
 def BuildRawAccuracyData(forecastAccuracyByDaySpan, selectedParameter):
+    'Builds the raw accuracy data for the selected parameter, including filtering and aggregation.'
     selectedMetric       = Configuration.ParametersEng.get(selectedParameter)
     df                   = forecastAccuracyByDaySpan.copy()
     df['Metric']         = df['Metric'].astype(str)
@@ -220,21 +218,24 @@ def BuildRawAccuracyData(forecastAccuracyByDaySpan, selectedParameter):
     df['DaySpanNumeric'] = pd.to_numeric(df['DaySpan'], errors='coerce')
     df['MAE']            = pd.to_numeric(df['MAE'], errors='coerce')
  
-    aggregatedDf = (df.dropna(subset=['DaySpanNumeric']).groupby(['DaySpanNumeric', 'Provider'], as_index=False).agg(MAE=('MAE', 'mean')).sort_values(['DaySpanNumeric', 'Provider']))
- 
-    providers = sorted(aggregatedDf['Provider'].unique())
-    daySpans  = sorted(aggregatedDf['DaySpanNumeric'].unique())
-    labels    = [f'{int(d)} Giorno' if d == 1 else f'{int(d)} Giorni' if float(d).is_integer() else f'{d:.2f} Giorni' for d in daySpans]
+    aggregatedDf         = (df.dropna(subset=['DaySpanNumeric']).groupby(['DaySpanNumeric', 'Provider'], as_index=False).agg(MAE=('MAE', 'mean')).sort_values(['DaySpanNumeric', 'Provider']))
+    providers            = sorted(aggregatedDf['Provider'].unique())
+    daySpans             = sorted(aggregatedDf['DaySpanNumeric'].unique())
+    labels               = [f'{int(d)} Giorno' if d == 1 else f'{int(d)} Giorni' if float(d).is_integer() else f'{d:.2f} Giorni' for d in daySpans]
+    
     return aggregatedDf, providers, daySpans, labels
  
 def Lookup(aggregatedDf, daySpan, provider):
+    'Looks up the MAE value for a specific day span and provider in the aggregated data.'
     result = aggregatedDf[(aggregatedDf['DaySpanNumeric'] == daySpan) & (aggregatedDf['Provider'] == provider)]
     return result.iloc[0]['MAE'] if len(result) > 0 else float('nan')
  
 def MAEIntensity(mae, parameter, maxVal=None):
+    'Calculates the intensity of the MAE value for visualization purposes, scaling it based on the parameter and optional maximum value.'
     if pd.isna(mae): return 0.3
-    scale   = Configuration.ParametersScale.get(parameter, 1)
-    disp    = abs(float(mae)) * scale
+    scale          = Configuration.ParametersScale.get(parameter, 1)
+    disp           = abs(float(mae)) * scale
+    
     if maxVal is not None and maxVal > 0: ceiling = maxVal
     else:
         _, mu   = Configuration.MaeThresholdsByParameter.get(parameter, (2, 5))
@@ -242,18 +243,19 @@ def MAEIntensity(mae, parameter, maxVal=None):
     return min(max(disp / ceiling, 0.08), 1.0)
 
 def HexToRgb(hex):
+    'Converts a hex color code to an RGB string.'
     hex     = hex.lstrip('#')
     r, g, b = int(hex[0:2], 16), int(hex[2:4], 16), int(hex[4:6], 16)
     return f'{r},{g},{b}'
 
 # Wrapper
 def RenderAccuracyContent(forecastAccuracyByDaySpan):
-    animate = not st.session_state.get('_accuracy_entered', False)
-    st.session_state['_accuracy_entered'] = True
+    animate                                   = not st.session_state.get('_accuracy_entered', False)
+    st.session_state['_accuracy_entered']     = True
     st.markdown(PageStylesCss(animate=animate), unsafe_allow_html=True)
 
-    selectedParameter                     = RenderParameterFilter()
-    st.session_state['selectedParameter'] = selectedParameter
+    selectedParameter                         = RenderParameterFilter()
+    st.session_state['selectedParameter']     = selectedParameter
     st.markdown(f"<div style='height:{Configuration.Spacing6};'></div>", unsafe_allow_html=True)
     st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette2Dark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)
     st.markdown(f"<div style='height:{Configuration.Spacing5};'></div>", unsafe_allow_html=True)
@@ -261,5 +263,5 @@ def RenderAccuracyContent(forecastAccuracyByDaySpan):
     aggregatedDf, providers, daySpans, labels = BuildRawAccuracyData(forecastAccuracyByDaySpan, selectedParameter)
 
     leftColumn, rightColumn = st.columns([1, 1], gap='large')
-    with leftColumn : RenderRadar(aggregatedDf, providers, daySpans, labels, selectedParameter, animate=animate)
-    with rightColumn: RenderBestProviderSummary(aggregatedDf, daySpans, labels, selectedParameter, animate=animate)
+    with leftColumn         : RenderRadar(aggregatedDf, providers, daySpans, labels, selectedParameter, animate=animate)
+    with rightColumn        : RenderBestProviderSummary(aggregatedDf, daySpans, labels, selectedParameter, animate=animate)

@@ -9,10 +9,12 @@ import configuration.ConfigurationStreamlit as Configuration
 
 # Helpers
 def GetBase64Logo(logoPath = Configuration.LogoPath):
+    'Load the logo image and return it as a base64-encoded string for embedding in HTML.'
     with open(logoPath, "rb") as logoFile: return base64.b64encode(logoFile.read()).decode()
 
 # CSS
 def HideRunningIndicatorCss():
+    'Return CSS to hide Streamlit\'s default running indicator and style the custom loader.'
     loaderMessageMaxWidth = Configuration.ScalePx(420)
     loaderBarWidth        = Configuration.ScalePx(320)
     loaderBarHeight       = Configuration.ScalePx(8)
@@ -39,6 +41,7 @@ def HideRunningIndicatorCss():
 
 # Loader
 def RenderLoader(doneEvent: threading.Event, stepSeconds = 5):
+    'Render a custom loading screen with animated messages and a progress bar while data is being loaded in the background.'
     st.markdown(HideRunningIndicatorCss(), unsafe_allow_html=True)
     random.shuffle(Configuration.LoadingMessages)
     
@@ -53,16 +56,10 @@ def RenderLoader(doneEvent: threading.Event, stepSeconds = 5):
         message     = Configuration.LoadingMessages[currentStep % len(Configuration.LoadingMessages)]
                
         slot.markdown(f"""
-            <div class='loader-container'>
-                <div class='weather-emoji'>
-                    <img src="data:image/png;base64,{logoBase64}" width="{Configuration.ScalePx(80)}">
-                </div>
+                <div class='loader-container'><div class='weather-emoji'><img src="data:image/png;base64,{logoBase64}" width="{Configuration.ScalePx(80)}"></div>
                 <div class='loader-title'>Domani Piove</div>
                 <div class='loader-message'>{message}</div>
-                <div class='loader-bar-track'>
-                    <div class='loader-bar-fill' style='width:{progress}%;'></div>
-                </div>
-            </div>""", unsafe_allow_html=True)
+                <div class='loader-bar-track'><div class='loader-bar-fill' style='width:{progress}%;'></div></div></div>""", unsafe_allow_html=True)
 
         doneEvent.wait(timeout=1.0)
 

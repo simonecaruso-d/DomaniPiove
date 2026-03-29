@@ -40,11 +40,9 @@ def NormalizeIntegerValue(value, columnName):
     value = SanitizeValue(value)
     if value is None: return None
 
-    if isinstance(value, bool):
-        raise ValueError(f'{columnName} must be an integer, got boolean: {value}')
+    if isinstance(value, bool): raise ValueError(f'{columnName} must be an integer, got boolean: {value}')
 
-    if isinstance(value, (int, np.integer)):
-        return int(value)
+    if isinstance(value, (int, np.integer)): return int(value)
 
     if isinstance(value, (float, np.floating)):
         if float(value).is_integer(): return int(value)
@@ -53,10 +51,8 @@ def NormalizeIntegerValue(value, columnName):
     if isinstance(value, str):
         cleanValue = value.strip()
         if cleanValue == '': return None
-        try:
-            numericValue = float(cleanValue)
-        except ValueError as parseError:
-            raise ValueError(f'{columnName} must be an integer, got: {value}') from parseError
+        try: numericValue = float(cleanValue)
+        except ValueError as parseError: raise ValueError(f'{columnName} must be an integer, got: {value}') from parseError
         if numericValue.is_integer(): return int(numericValue)
         raise ValueError(f'{columnName} must be an integer, got non-integer string: {value}')
 
@@ -67,8 +63,7 @@ def ExecuteWithRetry(operationFactory, operationDescription, maxRetries=Configur
     lastException = None
 
     for attempt in range(1, maxRetries + 1):
-        try:
-            return operationFactory()
+        try: return operationFactory()
         except Exception as requestError:
             lastException = requestError
             if attempt < maxRetries:
@@ -154,8 +149,7 @@ def WriteForecastToSupabase(forecastDf, supabaseUrl=Configuration.SupabaseUrl, s
 
         return {'RowsMarkedNotCurrent': rowsMarkedNotCurrent, 'RowsInserted': rowsInserted}
 
-    except Exception as writeError:
-        raise RuntimeError(f'Error writing Forecast to Supabase: {writeError}') from writeError
+    except Exception as writeError: raise RuntimeError(f'Error writing Forecast to Supabase: {writeError}') from writeError
 
 def WriteActualToSupabase(actualDf, supabaseUrl=Configuration.SupabaseUrl, supabaseKey=Configuration.SupabaseKey, batchSize=Configuration.WriteBatchSize, tableName='Actual'):
     'SCD Type1 on overlap: delete existing rows by (Datetime, CityId), then insert incoming rows'
@@ -182,8 +176,7 @@ def WriteActualToSupabase(actualDf, supabaseUrl=Configuration.SupabaseUrl, supab
 
         return {'RowsDeletedForOverlap': rowsDeletedForOverlap, 'RowsInserted': rowsInserted}
 
-    except Exception as writeError:
-        raise RuntimeError(f'Error writing Actual to Supabase: {writeError}') from writeError
+    except Exception as writeError: raise RuntimeError(f'Error writing Actual to Supabase: {writeError}') from writeError
 
 def WriteForecastAccuracyByDaySpanToSupabase(byDaySpanDf, supabaseUrl=Configuration.SupabaseUrl, supabaseKey=Configuration.SupabaseKey,
                                              batchSize=Configuration.WriteBatchSize, tableName='ForecastAccuracyByDaySpan'):
@@ -193,10 +186,10 @@ def WriteForecastAccuracyByDaySpanToSupabase(byDaySpanDf, supabaseUrl=Configurat
     try:
         supabaseClient: Client = create_client(supabaseUrl, supabaseKey)
 
-        preparedByDaySpanDf          = PrepareAccuracyDataFrame(byDaySpanDf, maxMetricLength=20)
-        uniqueCombinations           = preparedByDaySpanDf[['Provider', 'Metric', 'DaySpan']].drop_duplicates().copy()
+        preparedByDaySpanDf           = PrepareAccuracyDataFrame(byDaySpanDf, maxMetricLength=20)
+        uniqueCombinations            = preparedByDaySpanDf[['Provider', 'Metric', 'DaySpan']].drop_duplicates().copy()
         uniqueCombinations['DaySpan'] = uniqueCombinations['DaySpan'].map(lambda value: NormalizeIntegerValue(value, 'DaySpan'))
-        groupedKeys                  = uniqueCombinations.groupby(['Provider', 'Metric'])['DaySpan'].agg(lambda values: sorted(set(values)))
+        groupedKeys                   = uniqueCombinations.groupby(['Provider', 'Metric'])['DaySpan'].agg(lambda values: sorted(set(values)))
 
         rowsDeletedForOverlap = 0
         for (provider, metric), daySpanValues in tqdm(groupedKeys.items(), total=len(groupedKeys), desc='ForecastAccuracyByDaySpan | Delete overlaps'):

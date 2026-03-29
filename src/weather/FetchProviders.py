@@ -50,9 +50,9 @@ def FetchAllCities():
         allForecasts.append(forecastRecords)
         allActuals.append(actualRecords)
     
-    forecastDf = pd.concat(allForecasts, ignore_index=True) if allForecasts else pd.DataFrame()
+    forecastDf              = pd.concat(allForecasts, ignore_index=True) if allForecasts else pd.DataFrame()
     forecastDf['IsCurrent'] = 'Y'
-    actualDf   = pd.concat(allActuals, ignore_index=True) if allActuals else pd.DataFrame()
+    actualDf                = pd.concat(allActuals, ignore_index=True) if allActuals else pd.DataFrame()
 
     if not forecastDf.empty:
         forecastDatetimeValues  = pd.to_datetime(forecastDf['Datetime'], utc=True, errors='coerce')
@@ -73,7 +73,7 @@ def WriteAllToSupabase(forecastDf, actualDf):
     return forecastWriteResult, actualWriteResult
 
 # Run
-ForecastDf, ActualDf = FetchAllCities()
+ForecastDf, ActualDf                   = FetchAllCities()
 ForecastWriteResult, ActualWriteResult = WriteAllToSupabase(ForecastDf, ActualDf)
 
 print(f'Forecast write summary: {ForecastWriteResult}')

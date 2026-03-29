@@ -46,32 +46,20 @@ def RenderSidebar(sidebarIcons, footerIcons, pages):
     for page in pages:
         activeClass = 'active' if page == currentPage else ''
         icon        = sidebarIcons.get(page, '')
-        navigationItems.append(
-            f'<a class="sidebar-nav-item {activeClass}" href="?page={quote_plus(page)}" target="_self">'
-            f'<span class="sidebar-nav-item-content">'
-            f'<img class="sidebar-icon" src="data:image/png;base64,{icon}" alt="" />'
-            f'<span>{page}</span>'
-            f'</span>'
-            f'</a>')
+        navigationItems.append(f"""<a class="sidebar-nav-item {activeClass}" href="?page={quote_plus(page)}" target="_self">
+                               <span class="sidebar-nav-item-content"><img class="sidebar-icon" src="data:image/png;base64,{icon}" alt="" /><span>{page}</span></span></a>""")
 
-    emailIcon     = footerIcons.get('Email', '')
-    copyrightIcon = footerIcons.get('Copyright', '')
+    emailIcon       = footerIcons.get('Email', '')
+    copyrightIcon   = footerIcons.get('Copyright', '')
 
-    footerHtml = (
-        '<div class="sidebar-footer">'
-        '<a class="sidebar-footer-link" href="mailto:simocaruso1997@libero.it">'
+    footerHtml      = (
+        """<div class="sidebar-footer"><a class="sidebar-footer-link" href="mailto:simocaruso1997@libero.it">"""
         f'<img class="sidebar-footer-icon" src="data:image/png;base64,{emailIcon}" alt="" />'
-        '<span class="sidebar-footer-text">Contattami</span>'
-        '</a>'
-        '<div class="sidebar-footer-item">'
+        """<span class="sidebar-footer-text">Contattami</span></a><div class="sidebar-footer-item">"""
         f'<img class="sidebar-footer-icon" src="data:image/png;base64,{copyrightIcon}" alt="" />'
-        '<span class="sidebar-footer-text">Simone Caruso 2026, v 1.0</span>'
-        '</div>'
-        '</div>')
+        """<span class="sidebar-footer-text">Simone Caruso 2026, v 1.0</span></div></div>""")
 
-    st.sidebar.markdown('<div class="sidebar-shell">' 
-                        + '<div class="sidebar-nav">' + ''.join(navigationItems) + '</div>'
-                        + footerHtml + '</div>', unsafe_allow_html=True,)
+    st.sidebar.markdown('<div class="sidebar-shell">' + '<div class="sidebar-nav">' + ''.join(navigationItems) + '</div>' + footerHtml + '</div>', unsafe_allow_html=True)
     return currentPage
 
 def RenderUpdateIndicator(updateDate):
@@ -82,10 +70,7 @@ def RenderUpdateIndicator(updateDate):
         formatted = timestamp.strftime('%d %b %Y, %H:%M UTC') if not pd.isna(timestamp) else None
     except Exception: formatted = None
     if not formatted: return ''
-    return (f'<div class="topbar-live">'
-            f'<span class="topbar-live-dot"></span>'
-            f'<span>Ultimo aggiornamento: {formatted}</span>'
-            f'</div>')
+    return (f"""<div class="topbar-live"><span class="topbar-live-dot"></span><span>Ultimo aggiornamento: {formatted}</span></div>""")
 
 # Wrappers
 def RenderStyles(logo, 
@@ -99,17 +84,15 @@ def RenderStyles(logo,
                  pageTitle       = Configuration.PageTitle, 
                  updateDate      = None):
     'Inject global UI styles and render the custom topbar shell.'
-    topbarHeightPx = Configuration.ScalePx(60)
-    topbarLeftExpandedPx = Configuration.ScalePx(244)
+    topbarHeightPx        = Configuration.ScalePx(60)
+    topbarLeftExpandedPx  = Configuration.ScalePx(244)
     topbarLeftCollapsedPx = Configuration.ScalePx(76)
-    topbarLogoHeightPx = Configuration.ScalePx(34)
-    topbarPaddingX = Configuration.ScalePx(24)
-    topbarGap = Configuration.ScalePx(12)
+    topbarLogoHeightPx    = Configuration.ScalePx(34)
+    topbarPaddingX        = Configuration.ScalePx(24)
+    topbarGap             = Configuration.ScalePx(12)
     sidebarCollapsedWidth = Configuration.ScalePx(76)
 
-    st.markdown(f"""
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <style>
+    st.markdown(f"""<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>
             :root {{
                 --dp-primary: #ab8674;
                 --dp-primary-dark: #96705e;
@@ -123,8 +106,7 @@ def RenderStyles(logo,
                 --dp-shadow-strong: 0 20px 48px rgba(120,80,58,0.28);
                 --dp-glow-primary: 0 0 38px rgba(171,134,116,0.34);
                 --dp-bar-blur: blur(14px) saturate(165%);
-                --dp-bar-shadow: 0 10px 40px rgba(171,134,116,0.34), 0 0 30px rgba(171,134,116,0.26), inset 0 1px 0 rgba(255,255,255,0.20);
-            }}
+                --dp-bar-shadow: 0 10px 40px rgba(171,134,116,0.34), 0 0 30px rgba(171,134,116,0.26), inset 0 1px 0 rgba(255,255,255,0.20)}}
 
             html, body,
             [data-testid="stAppViewContainer"],
@@ -212,8 +194,7 @@ def RenderStyles(logo,
                     var topbar  = document.querySelector('.custom-topbar');
                     if (!sidebar || !topbar) return;
                     var sidebarWidth = Math.max({Configuration.ScalePx(60)}, sidebar.offsetWidth || {Configuration.ScalePx(60)});
-                    topbar.style.left = sidebarWidth + 'px';
-                }}
+                    topbar.style.left = sidebarWidth + 'px';}}
                 function syncViewport() {{
                     var widthBucket  = Math.round((window.innerWidth || 0) / 40) * 40;
                     var heightBucket = Math.round((window.innerHeight || 0) / 40) * 40;
@@ -226,8 +207,7 @@ def RenderStyles(logo,
 
                     params.set('vw', String(widthBucket));
                     params.set('vh', String(heightBucket));
-                    window.location.search = '?' + params.toString();
-                }}
+                    window.location.search = '?' + params.toString();}}
                 function init() {{
                     syncTopbar();
                     syncViewport();
@@ -237,32 +217,16 @@ def RenderStyles(logo,
                     window.addEventListener('resize', syncTopbar);
                     window.addEventListener('resize', function() {{
                         clearTimeout(window.__dpResizeTimer);
-                        window.__dpResizeTimer = setTimeout(syncViewport, 200);
-                    }});
-                }}
-                if (document.readyState === 'loading') {{
-                    document.addEventListener('DOMContentLoaded', init);
-                }} else {{
+                        window.__dpResizeTimer = setTimeout(syncViewport, 200);}});}}
+                if (document.readyState === 'loading') {{document.addEventListener('DOMContentLoaded', init);}} else {{
                     var attempts = 0;
                     var poll = setInterval(function() {{
                         if (document.querySelector('[data-testid="stSidebar"]') || ++attempts > 20) {{
                             clearInterval(poll);
-                            init();
-                        }}
-                    }}, 100);
-                }}
-            }})();
-        </script>
-        <div class="custom-topbar">
-            <img src="data:image/png;base64,{logo}" />
-            <span>{pageTitle}</span>
-            {RenderUpdateIndicator(updateDate)}
-        </div>""", unsafe_allow_html=True)
+                            init();}}}}, 100);}}}})();</script>
+        <div class="custom-topbar"><img src="data:image/png;base64,{logo}" /><span>{pageTitle}</span>{RenderUpdateIndicator(updateDate)}</div>""", unsafe_allow_html=True)
 
-def RenderLayout(pageIconPaths   = Configuration.PageIconPaths, 
-                 footerIconPaths = Configuration.FooterIconPaths, 
-                 pages           = Configuration.Pages, 
-                 updateDate      = None):
+def RenderLayout(pageIconPaths = Configuration.PageIconPaths, footerIconPaths = Configuration.FooterIconPaths, pages = Configuration.Pages, updateDate = None):
     'Render styles and sidebar, then return the selected page key.'
     logo         = LoadLogo()
     sidebarIcons = LoadSidebarIcons(pageIconPaths)

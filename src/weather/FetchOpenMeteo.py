@@ -28,8 +28,7 @@ def BuildOpenMeteoRecord(cityId, retrievalDatetime, hourly, index):
         'Rain'                    : hourly['rain'][index],
         'Snowfall'                : hourly['snowfall'][index],
         'CloudCover'              : hourly['cloud_cover'][index] / 100,
-        'WindSpeed'               : hourly['wind_speed_10m'][index],
-    }
+        'WindSpeed'               : hourly['wind_speed_10m'][index]}
 
 def FetchOpenMeteo(cityId, latitude, longitude, forecastDays=Configuration.OthersMaxForecastDays):
     'Get hourly forecasts from Open-Meteo API'

@@ -25,7 +25,7 @@ def BuildOpenMeteoArchiveParams(latitude, longitude, pastDays):
 
 def GetHourlyValue(hourly, fieldName, index):
     'Safely read one hourly value from Open-Meteo payload'
-    values = hourly.get(fieldName)
+    values           = hourly.get(fieldName)
     if values is None: return None
     return values[index]
 
@@ -49,8 +49,7 @@ def BuildOpenMeteoArchiveRecord(cityId, retrievalDatetime, hourly, index):
         'Rain'                    : rain,
         'Snowfall'                : snowfall,
         'CloudCover'              : GetHourlyValue(hourly, 'cloud_cover', index) / 100 if GetHourlyValue(hourly, 'cloud_cover', index) is not None else None,
-        'WindSpeed'               : GetHourlyValue(hourly, 'wind_speed_10m', index),
-    }
+        'WindSpeed'               : GetHourlyValue(hourly, 'wind_speed_10m', index)}
 
 def FetchOpenMeteoArchive(cityId, latitude, longitude, pastDays=Configuration.HistoricalPastDays):
     'Get hourly historical weather from Open-Meteo Archive API'
@@ -60,8 +59,8 @@ def FetchOpenMeteoArchive(cityId, latitude, longitude, pastDays=Configuration.Hi
     requestParameters = BuildOpenMeteoArchiveParams(latitude, longitude, pastDays)
     data              = Helpers.SafeRequest(Configuration.OpenMeteoArchiveUrl, requestParameters, 'OpenMeteoArchive')
     
-    if not isinstance(data, dict): return []
-    hourly = data.get('hourly')
+    if not isinstance(data, dict)                          : return []
+    hourly                                                 = data.get('hourly')
     if not isinstance(hourly, dict) or 'time' not in hourly: return []
 
     for index in range(len(hourly['time'])):

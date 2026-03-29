@@ -58,14 +58,14 @@ def NormalizeVisibilityToMeters(visibility, unit):
     'Normalize visibility values to meters'
     if visibility is None: return None
     if unit == 'km': return float(visibility) * 1000
-    if unit == 'm': return float(visibility)
+    if unit == 'm' : return float(visibility)
     raise ValueError(f'Unknown visibility unit: {unit}')
 
 def NormalizeWindSpeedToKmh(windSpeed, unit):
     'Normalize wind speed values to km/h'
     if windSpeed is None: return None
     if unit == 'km/h': return float(windSpeed)
-    if unit == 'm/s':  return float(windSpeed) * 3.6
+    if unit == 'm/s' :  return float(windSpeed) * 3.6
     raise ValueError(f'Unknown wind speed unit: {unit}')
 
 # Data Engineering
@@ -80,7 +80,7 @@ def CalculateFeltTemperature(temperature, humidity, windSpeed):
     'Apparent temperature via Steadman formula (inputs: °C, %, m/s)'
     if any(value is None for value in [temperature, humidity, windSpeed]): return None
     vaporPressure = (humidity / 100) * 6.105 * math.exp(17.27 * temperature / (237.7 + temperature))
-    return          round(temperature + 0.33 * vaporPressure - 0.70 * windSpeed - 4.00, 2)
+    return round(temperature + 0.33 * vaporPressure - 0.70 * windSpeed - 4.00, 2)
 
 def EstimateSnowfall(precipitation, temperature):
     'Estimate snowfall in cm (10:1 snow-to-water ratio) when temperature is at or below 2°C'
