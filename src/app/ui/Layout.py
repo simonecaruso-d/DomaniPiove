@@ -62,15 +62,20 @@ def RenderSidebar(sidebarIcons, footerIcons, pages):
     st.sidebar.markdown('<div class="sidebar-shell">' + '<div class="sidebar-nav">' + ''.join(navigationItems) + '</div>' + footerHtml + '</div>', unsafe_allow_html=True)
     return currentPage
 
-def RenderUpdateIndicator(updateDate):
-    'Build the topbar live-update indicator HTML.'
+def FormatUpdateLabel(updateDate):
+    'Return a plain-text update label for topbar rendering.'
     try:
         value     = updateDate.iloc[0] if hasattr(updateDate, 'iloc') else updateDate
         timestamp = pd.to_datetime(value, utc=True, errors='coerce')
         formatted = timestamp.strftime('%d %b %Y, %H:%M UTC') if not pd.isna(timestamp) else None
     except Exception: formatted = None
-    if not formatted: return ''
-    return (f"""<div class="topbar-live"><span class="topbar-live-dot"></span><span>Ultimo aggiornamento: {formatted}</span></div>""")
+    if not formatted: return 'Ultimo aggiornamento: n.d.'
+    return f'Ultimo aggiornamento: {formatted}'
+
+def RenderUpdateIndicator(updateDate):
+    'Build the topbar live-update indicator HTML.'
+    updateLabel = FormatUpdateLabel(updateDate)
+    return (f"""<div class="topbar-live"><span class="topbar-live-dot"></span><span>{updateLabel}</span></div>""")
 
 # Wrappers
 def RenderStyles(logo, 
@@ -84,6 +89,7 @@ def RenderStyles(logo,
                  pageTitle       = Configuration.PageTitle, 
                  updateDate      = None):
     'Inject global UI styles and render the custom topbar shell.'
+    updateLabelEscaped    = FormatUpdateLabel(updateDate).replace('\\', '\\\\').replace('"', '\\"')
     topbarHeightPx        = Configuration.ScalePx(60)
     topbarLeftExpandedPx  = Configuration.ScalePx(244)
     topbarLeftCollapsedPx = Configuration.ScalePx(76)
@@ -124,29 +130,39 @@ def RenderStyles(logo,
                     linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,247,244,0.98) 100%);}}
 
             [data-testid="stHeader"],
+            [data-testid="stAppHeader"],
+            [data-testid="stToolbar"],
             [data-testid="stSidebar"] {{background: var(--dp-bar-bg); box-shadow: var(--dp-bar-shadow); backdrop-filter: var(--dp-bar-blur); position: relative; overflow: hidden;}}
 
             [data-testid="stSidebar"] > div,
             [data-testid="stSidebar"] [data-testid="stSidebarContent"] {{background: transparent !important;}}
 
             [data-testid="stHeader"]::before,
+            [data-testid="stAppHeader"]::before,
+            [data-testid="stToolbar"]::before,
             [data-testid="stSidebar"]::before {{content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--dp-bar-overlay); opacity: 0.55;}}
 
             [data-testid="stHeader"]::after,
+            [data-testid="stAppHeader"]::after,
+            [data-testid="stToolbar"]::after,
             [data-testid="stSidebar"]::after {{content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 18% 12%, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.00) 58%);}}
 
-            [data-testid="stHeader"] {{border-bottom: 1px solid rgba(255,255,255,0.20);}}
+            [data-testid="stHeader"],
+            [data-testid="stAppHeader"],
+            [data-testid="stToolbar"] {{border-bottom: 1px solid rgba(255,255,255,0.20);}}
 
-            .custom-topbar {{position: fixed; top: 0; left: {Configuration.ScalePx(60)}px; right: 0; height: {topbarHeightPx}px; background: linear-gradient(100deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.00) 40%); display: flex; align-items: center; padding: 0 {topbarPaddingX}px; gap: {topbarGap}px; z-index: 999998; pointer-events: none; transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1); backdrop-filter: blur(4px) saturate(130%);}}
-            body:has([data-testid="stSidebar"][aria-expanded="true"]) .custom-topbar {{left: {topbarLeftExpandedPx}px;}}
-            body:has([data-testid="stSidebar"][aria-expanded="false"]) .custom-topbar {{left: {topbarLeftCollapsedPx}px;}}
-            .custom-topbar img {{height: {topbarLogoHeightPx}px; width: auto; filter: drop-shadow(0 0 8px rgba(255,255,255,0.48));}}
-            .custom-topbar span {{color: {Configuration.WhiteColor}; font-size: {Configuration.FontSize10}; font-weight: 700; letter-spacing: {Configuration.LetterSpacing2}; text-shadow: 0 0 18px rgba(255,255,255,0.36), 0 0 34px rgba(171,134,116,0.42);}}
-            .topbar-live {{margin-left: auto; display: flex; align-items: center; gap: {Configuration.ScalePx(7)}px; color: {Configuration.WhiteColor}; font-size: {Configuration.FontSizeAA}; font-weight: 500; letter-spacing: {Configuration.LetterSpacing1}; white-space: nowrap; pointer-events: none; transform: scale(0.75); transform-origin: right center;}}
+            .custom-topbar {{position: fixed; top: 0; left: 0; right: 0; height: {topbarHeightPx}px; background: linear-gradient(108deg, rgba(171,134,116,0.88) 0%, rgba(150,112,94,0.84) 58%, rgba(130,95,79,0.82) 100%); border-bottom: 1px solid rgba(255,255,255,0.22); display: flex !important; align-items: center; padding: 0 {topbarPaddingX}px; gap: {topbarGap}px; z-index: 2147483000; pointer-events: none; transition: padding-left 0.35s cubic-bezier(0.22, 1, 0.36, 1); backdrop-filter: blur(11px) saturate(160%); box-shadow: 0 10px 24px rgba(120,80,58,0.22), inset 0 1px 0 rgba(255,255,255,0.25); overflow: hidden; visibility: visible !important; opacity: 1 !important; box-sizing: border-box;}}
+            .custom-topbar::before {{content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(120deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.00) 46%); opacity: 0.55;}}
+            .custom-topbar::after {{content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 20% 10%, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.00) 56%);}}
+            body:has([data-testid="stSidebar"][aria-expanded="true"]) .custom-topbar {{padding-left: {topbarLeftExpandedPx}px;}}
+            body:has([data-testid="stSidebar"][aria-expanded="false"]) .custom-topbar {{padding-left: {topbarLeftCollapsedPx}px;}}
+            .custom-topbar img {{position: relative; z-index: 1; height: {topbarLogoHeightPx}px; width: auto; filter: drop-shadow(0 0 8px rgba(255,255,255,0.48));}}
+            .custom-topbar .topbar-title {{position: relative; z-index: 1; color: {Configuration.WhiteColor}; font-size: clamp(1.35rem, 1.15rem + 0.45vw, 1.7rem); font-weight: 700; letter-spacing: {Configuration.LetterSpacing2}; text-shadow: 0 0 16px rgba(255,255,255,0.35), 0 0 26px rgba(171,134,116,0.36); flex: 0 0 auto; white-space: nowrap;}}
+            .topbar-live {{margin-left: auto; display: flex; align-items: center; gap: {Configuration.ScalePx(7)}px; color: {Configuration.WhiteColor}; font-size: {Configuration.FontSize3}; font-weight: 500; letter-spacing: {Configuration.LetterSpacing1}; white-space: nowrap; pointer-events: none; flex: 0 0 auto;}}
             .topbar-live-dot {{flex-shrink: 0; width: {Configuration.ScalePx(7)}px; height: {Configuration.ScalePx(7)}px; border-radius: 50%; background: #4ade80; animation: dp-live-pulse 2.4s ease-in-out infinite;}}
-            @keyframes dp-live-pulse {{
-                0%, 100% {{ box-shadow: 0 0 0 0 rgba(74,222,128,0.75); }}
-                55%       {{ box-shadow: 0 0 0 6px rgba(74,222,128,0.00); }}}}
+
+            /* Backup header text in case custom-topbar HTML is not mounted by the browser/runtime. */
+
 
             [data-testid="stSidebar"] {{border-right: 1px solid rgba(255,255,255,0.20);}}
             [data-testid="stSidebar"] * {{color: #FFFFFF !important; font-size: {Configuration.FontSize3} !important;}}
@@ -193,8 +209,11 @@ def RenderStyles(logo,
                     var sidebar = document.querySelector('[data-testid="stSidebar"]');
                     var topbar  = document.querySelector('.custom-topbar');
                     if (!sidebar || !topbar) return;
-                    var sidebarWidth = Math.max({Configuration.ScalePx(60)}, sidebar.offsetWidth || {Configuration.ScalePx(60)});
-                    topbar.style.left = sidebarWidth + 'px';}}
+                    var rawSidebarWidth = sidebar.offsetWidth || {Configuration.ScalePx(60)};
+                    var maxSafeLeft = Math.max({Configuration.ScalePx(60)}, Math.floor((window.innerWidth || 0) * 0.45));
+                    var sidebarWidth = Math.max({Configuration.ScalePx(60)}, Math.min(rawSidebarWidth, maxSafeLeft));
+                    topbar.style.left = '0px';
+                    topbar.style.paddingLeft = sidebarWidth + 'px';}}
                 function syncViewport() {{
                     var widthBucket  = Math.round((window.innerWidth || 0) / 40) * 40;
                     var heightBucket = Math.round((window.innerHeight || 0) / 40) * 40;
@@ -223,8 +242,12 @@ def RenderStyles(logo,
                     var poll = setInterval(function() {{
                         if (document.querySelector('[data-testid="stSidebar"]') || ++attempts > 20) {{
                             clearInterval(poll);
-                            init();}}}}, 100);}}}})();</script>
-        <div class="custom-topbar"><img src="data:image/png;base64,{logo}" /><span>{pageTitle}</span>{RenderUpdateIndicator(updateDate)}</div>""", unsafe_allow_html=True)
+                            init();}}}}, 100);}}}})();</script>""", unsafe_allow_html=True)
+
+    st.markdown(
+        f"""<div class="custom-topbar"><img src="data:image/png;base64,{logo}" /><span class="topbar-title">Domani Piove</span>{RenderUpdateIndicator(updateDate)}</div>""",
+        unsafe_allow_html=True
+    )
 
 def RenderLayout(pageIconPaths = Configuration.PageIconPaths, footerIconPaths = Configuration.FooterIconPaths, pages = Configuration.Pages, updateDate = None):
     'Render styles and sidebar, then return the selected page key.'
