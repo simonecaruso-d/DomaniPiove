@@ -19,8 +19,19 @@ jobs:
             exit 0
           fi
 
-          rome_hour=$(TZ=Europe/Rome date +'%H')
-          if [ "$rome_hour" = "08" ]; then
+          utc_hour=$(date -u +'%H')
+          rome_offset=$(TZ=Europe/Rome date +'%z')
+
+          # Run once/day at Rome 08, supporting CET (+0100) and CEST (+0200)
+          if [ "$rome_offset" = "+0200" ]; then
+            expected_utc_hour="06"
+          else
+            expected_utc_hour="07"
+          fi
+
+          echo "Gate debug -> utc_hour=$utc_hour rome_offset=$rome_offset expected_utc_hour=$expected_utc_hour"
+
+          if [ "$utc_hour" = "$expected_utc_hour" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_run=false" >> "$GITHUB_OUTPUT"

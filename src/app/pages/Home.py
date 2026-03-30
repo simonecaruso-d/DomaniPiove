@@ -37,6 +37,78 @@ def MapMarkerHtml(cityName):
                 white-space: 'nowrap'; box-shadow: {Configuration.BoxShadowMarker}; 
                 text-align: 'center';">{cityName}</div>"""
 
+def ClientCarouselHtml(slides):
+    'Returns HTML for the experimental client-side carousel used to compare with the current slideshow.'
+    slidesJson = json.dumps(slides)
+
+    return f"""
+    <style>
+        .home-client-carousel-wrap {{border-radius: {Configuration.Border2}; background: {Configuration.BackgroundAlpha}; padding: 12px; box-sizing: border-box; font-family: {Configuration.FontFamily}; color: {Configuration.AccentColor};}}
+        .home-client-carousel-grid {{display: grid; grid-template-columns: 3fr 2fr; gap: 12px; align-items: stretch;}}
+        .home-client-carousel-image-shell {{min-height: {Configuration.HeightSlideshow}px; border-radius: {Configuration.Border3}; overflow: hidden; background: rgba(255,255,255,0.12);}}
+        .home-client-carousel-image {{width: 100%; height: 100%; object-fit: cover; display: block;}}
+        .home-client-carousel-caption {{min-height: {Configuration.HeightSlideshow}px; border-radius: {Configuration.Border2};padding: {Configuration.Border1}; box-sizing: border-box; background: rgba(255,255,255,0.55);overflow: auto;}}
+        .home-client-carousel-caption-title {{font-size: {Configuration.FontSize3}; font-weight: {Configuration.FontWeight4}; margin-bottom: {Configuration.Spacing3};}}
+        .home-client-carousel-caption-text {{font-size: {Configuration.FontSize2}; line-height: {Configuration.LineHeight4};}}
+        .home-client-carousel-controls {{margin-top: 10px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; align-items: center;}}
+        .home-client-carousel-btn {{height: {max(Configuration.HeightSlideshowControl + Configuration.ScalePx(12), 32)}px; border-radius: {Configuration.RadiusButton}px; border: 1px solid {Configuration.AccentColor}; background: rgba(255,255,255,0.22); color: {Configuration.AccentColor}; cursor: pointer; font-weight: {Configuration.FontWeight4};}}
+        .home-client-carousel-count {{text-align: center; font-size: {Configuration.FontSize2}; font-weight: {Configuration.FontWeight3};}}
+    </style>
+
+    <div class="home-client-carousel-wrap">
+        <div class="home-client-carousel-grid">
+            <div class="home-client-carousel-image-shell">
+                <img id="homeClientCarouselImage" class="home-client-carousel-image" alt="slide" />
+            </div>
+            <div class="home-client-carousel-caption">
+                <div id="homeClientCarouselTitle" class="home-client-carousel-caption-title"></div>
+                <div id="homeClientCarouselText" class="home-client-carousel-caption-text"></div>
+            </div>
+        </div>
+        <div class="home-client-carousel-controls">
+            <button id="homeClientCarouselPrev" class="home-client-carousel-btn" type="button">◀</button>
+            <div id="homeClientCarouselCount" class="home-client-carousel-count"></div>
+            <button id="homeClientCarouselNext" class="home-client-carousel-btn" type="button">▶</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {{
+            const slides = {slidesJson};
+            if (!Array.isArray(slides) || slides.length === 0) return;
+
+            const image = document.getElementById('homeClientCarouselImage');
+            const title = document.getElementById('homeClientCarouselTitle');
+            const text  = document.getElementById('homeClientCarouselText');
+            const count = document.getElementById('homeClientCarouselCount');
+            const prev  = document.getElementById('homeClientCarouselPrev');
+            const next  = document.getElementById('homeClientCarouselNext');
+
+            let index = 0;
+
+            function render() {{
+                const slide = slides[index];
+                image.src = 'data:' + slide.mime + ';base64,' + slide.image_b64;
+                title.textContent = slide.display_name || '';
+                text.innerHTML = slide.caption || '';
+                count.textContent = (index + 1) + ' / ' + slides.length;
+            }}
+
+            prev.addEventListener('click', function() {{
+                index = (index - 1 + slides.length) % slides.length;
+                render();
+            }});
+
+            next.addEventListener('click', function() {{
+                index = (index + 1) % slides.length;
+                render();
+            }});
+
+            render();
+        }})();
+    </script>
+    """
+
 # CSS Templates
 def PageStylesCss(animate):
     'Returns CSS styles for the home page, with optional animation for entering elements.'
@@ -98,11 +170,12 @@ def MapContainerCss(animate):
                                      to   {{ opacity: 1; transform: translateY(0); }} }}
     </style>"""
 
-# Rendering Functions
+# General
 def RenderPageStyles(animate = True):
     'Renders the page styles for the home page, applying animations if specified.'
     st.markdown(PageStylesCss(animate), unsafe_allow_html=True)
 
+# Titles
 def RenderTitle():
     'Renders the fixed title for the home page.'
     st.markdown(TitleCss(), unsafe_allow_html=True)
@@ -111,6 +184,7 @@ def RenderSectionTitle(title, animationClass):
     'Renders a section title with optional animation class.'
     st.markdown(SectionTitleHtml(title, animationClass), unsafe_allow_html=True)
 
+# Texts
 def RenderWhoWeAre():
     'Renders the "Chi siamo" section of the home page with a title and text block.'
     RenderSectionTitle('‎ ‎ ‎ Chi siamo', animationClass='home-enter-delay-1')
@@ -121,6 +195,7 @@ def RenderHowItWorks():
     RenderSectionTitle('‎ ‎ ‎ Come funziona & Dove siamo', animationClass='home-enter-delay-3')
     st.markdown(TextBlockHtml(Configuration.HowItWorks, animationClass='home-enter-delay-3'), unsafe_allow_html=True)
 
+# Slideshow
 def GetImageCaption(imageStem):
     'Returns the caption for a given image stem, or a default caption if not found.'
     return Configuration.ImageCaptions.get(imageStem, f'Scenario meteorologico: {imageStem.replace("_", " ").title()}.')
@@ -135,36 +210,6 @@ def LoadSlideshowData(imagesDirectory=str(Configuration.ImagesHistoryDirectory))
         slideshowData.append({'stem': imagePath.stem, 'display_name': imagePath.stem.replace('_', ' ').title(), 'caption': GetImageCaption(imagePath.stem), 'path': str(imagePath)})
     return slideshowData
 
-def RenderSlideshow():
-    'Renders the slideshow section of the home page using Streamlit media paths to reduce payload size across reruns.'
-    slideshowData = LoadSlideshowData()
-
-    if 'home_slideshow_index' not in st.session_state:
-        st.session_state['home_slideshow_index'] = 0
-
-    currentIndex = st.session_state['home_slideshow_index'] % len(slideshowData)
-    currentSlide = slideshowData[currentIndex]
-
-    imageColumn, captionColumn = st.columns([3, 2])
-    with imageColumn:
-        st.image(currentSlide['path'], use_container_width=True)
-    with captionColumn:
-        st.markdown(SlideCaptionHtml(currentSlide['display_name'], currentSlide['caption'], animationClass='home-enter-delay-2'), unsafe_allow_html=True)
-
-    st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
-
-    previousColumn, counterColumn, nextColumn = st.columns([1, 2, 1])
-    with previousColumn:
-        if st.button('◀', key='home_slide_prev', type='secondary', use_container_width=True):
-            st.session_state['home_slideshow_index'] = (currentIndex - 1) % len(slideshowData)
-            st.rerun()
-    with counterColumn:
-        st.markdown(SlideCounterHtml(currentIndex + 1, len(slideshowData), animationClass='home-enter-delay-2'), unsafe_allow_html=True)
-    with nextColumn:
-        if st.button('▶', key='home_slide_next', type='secondary', use_container_width=True):
-            st.session_state['home_slideshow_index'] = (currentIndex + 1) % len(slideshowData)
-            st.rerun()
-
 @st.cache_data(ttl=3600, show_spinner=False)
 def LoadClientCarouselData(imagesDirectory=str(Configuration.ImagesHistoryDirectory)):
     'Loads slideshow data with inline base64 payload for the experimental client-side carousel.'
@@ -173,163 +218,21 @@ def LoadClientCarouselData(imagesDirectory=str(Configuration.ImagesHistoryDirect
 
     for slide in slideshowData:
         imagePath = Path(slide['path'])
-        with imagePath.open('rb') as imageFile:
-            imageB64 = base64.b64encode(imageFile.read()).decode('ascii')
-
-        clientData.append(
-            {
-                'display_name': slide['display_name'],
-                'caption'     : slide['caption'],
-                'mime'        : f"image/{imagePath.suffix.lstrip('.').lower()}",
-                'image_b64'   : imageB64,
-            }
-        )
+        with imagePath.open('rb') as imageFile: imageB64 = base64.b64encode(imageFile.read()).decode('ascii')
+        clientData.append({'display_name': slide['display_name'], 'caption': slide['caption'], 'mime': f"image/{imagePath.suffix.lstrip('.').lower()}", 'image_b64': imageB64})
 
     return clientData
 
-def ClientCarouselTestHtml(slides):
-    'Returns HTML for the experimental client-side carousel used to compare with the current slideshow.'
-    slidesJson = json.dumps(slides)
-
-    return f"""
-    <style>
-        .home-client-carousel-wrap {{
-            border-radius: {Configuration.Border2};
-            background: {Configuration.BackgroundAlpha};
-            padding: 12px;
-            box-sizing: border-box;
-            font-family: {Configuration.FontFamily};
-            color: {Configuration.AccentColor};
-        }}
-        .home-client-carousel-grid {{
-            display: grid;
-            grid-template-columns: 3fr 2fr;
-            gap: 12px;
-            align-items: stretch;
-        }}
-        .home-client-carousel-image-shell {{
-            min-height: {Configuration.HeightSlideshow}px;
-            border-radius: {Configuration.Border3};
-            overflow: hidden;
-            background: rgba(255,255,255,0.12);
-        }}
-        .home-client-carousel-image {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }}
-        .home-client-carousel-caption {{
-            min-height: {Configuration.HeightSlideshow}px;
-            border-radius: {Configuration.Border2};
-            padding: {Configuration.Border1};
-            box-sizing: border-box;
-            background: rgba(255,255,255,0.55);
-            overflow: auto;
-        }}
-        .home-client-carousel-caption-title {{
-            font-size: {Configuration.FontSize3};
-            font-weight: {Configuration.FontWeight4};
-            margin-bottom: {Configuration.Spacing3};
-        }}
-        .home-client-carousel-caption-text {{
-            font-size: {Configuration.FontSize2};
-            line-height: {Configuration.LineHeight4};
-        }}
-        .home-client-carousel-controls {{
-            margin-top: 10px;
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
-            gap: 8px;
-            align-items: center;
-        }}
-        .home-client-carousel-btn {{
-            height: {Configuration.HeightSlideshowControl}px;
-            border-radius: 8px;
-            border: 1px solid {Configuration.AccentColor};
-            background: rgba(255,255,255,0.22);
-            color: {Configuration.AccentColor};
-            cursor: pointer;
-            font-weight: {Configuration.FontWeight4};
-        }}
-        .home-client-carousel-count {{
-            text-align: center;
-            font-size: {Configuration.FontSize2};
-            font-weight: {Configuration.FontWeight3};
-        }}
-
-        @media (max-width: 900px) {{
-            .home-client-carousel-grid {{ grid-template-columns: 1fr; }}
-            .home-client-carousel-image-shell,
-            .home-client-carousel-caption {{ min-height: unset; }}
-        }}
-    </style>
-
-    <div class="home-client-carousel-wrap">
-        <div class="home-client-carousel-grid">
-            <div class="home-client-carousel-image-shell">
-                <img id="homeClientCarouselImage" class="home-client-carousel-image" alt="slide" />
-            </div>
-            <div class="home-client-carousel-caption">
-                <div id="homeClientCarouselTitle" class="home-client-carousel-caption-title"></div>
-                <div id="homeClientCarouselText" class="home-client-carousel-caption-text"></div>
-            </div>
-        </div>
-        <div class="home-client-carousel-controls">
-            <button id="homeClientCarouselPrev" class="home-client-carousel-btn" type="button">◀</button>
-            <div id="homeClientCarouselCount" class="home-client-carousel-count"></div>
-            <button id="homeClientCarouselNext" class="home-client-carousel-btn" type="button">▶</button>
-        </div>
-    </div>
-
-    <script>
-        (function() {{
-            const slides = {slidesJson};
-            if (!Array.isArray(slides) || slides.length === 0) return;
-
-            const image = document.getElementById('homeClientCarouselImage');
-            const title = document.getElementById('homeClientCarouselTitle');
-            const text  = document.getElementById('homeClientCarouselText');
-            const count = document.getElementById('homeClientCarouselCount');
-            const prev  = document.getElementById('homeClientCarouselPrev');
-            const next  = document.getElementById('homeClientCarouselNext');
-
-            let index = 0;
-
-            function render() {{
-                const slide = slides[index];
-                image.src = 'data:' + slide.mime + ';base64,' + slide.image_b64;
-                title.textContent = slide.display_name || '';
-                text.innerHTML = slide.caption || '';
-                count.textContent = (index + 1) + ' / ' + slides.length;
-            }}
-
-            prev.addEventListener('click', function() {{
-                index = (index - 1 + slides.length) % slides.length;
-                render();
-            }});
-
-            next.addEventListener('click', function() {{
-                index = (index + 1) % slides.length;
-                render();
-            }});
-
-            render();
-        }})();
-    </script>
-    """
-
-def RenderClientCarouselTest():
+def RenderClientCarousel():
     'Renders the experimental client-side carousel below all home sections for performance comparison.'
     slides = LoadClientCarouselData()
-    if not slides:
-        st.info('Nessuna immagine disponibile per testare il carousel client-side.')
-        return
+    if Configuration.ResponsiveViewportWidth <= 900: componentHeight = (Configuration.HeightSlideshow * 2) + Configuration.ScalePx(270)
+    else                                           : componentHeight = Configuration.HeightSlideshow + Configuration.ScalePx(270)
 
-    st.markdown(f'<div style="height: {Configuration.Spacing4};"></div>', unsafe_allow_html=True)
-    RenderSectionTitle('‎ ‎ ‎ Test carousel client-side (Opzione 3)', animationClass='home-enter-delay-3')
-    st.components.v1.html(ClientCarouselTestHtml(slides), height=1000)
+    st.markdown(f'<div style="height: {Configuration.Spacing2};"></div>', unsafe_allow_html=True)
+    st.components.v1.html(ClientCarouselHtml(slides), height = componentHeight)
 
+# Map
 def RenderMap(cities, animate=True):
     'Renders a map with markers for the specified cities, applying optional animation for entering elements.'
     map = folium.Map(location=[42.5, 12.5], zoom_start=5, tiles='CartoDB positron', prefer_canvas=True)
@@ -350,19 +253,17 @@ def RenderHomeContent(cities):
     viewportWidth             = Configuration.ResponsiveViewportWidth
     if viewportWidth <= 1300  : leftSectionGap = f"{Configuration.ScalePx(65)}px"
     elif viewportWidth <= 1380: leftSectionGap = f"{Configuration.ScalePx(120)}px"
-    else                      : leftSectionGap = Configuration.Spacing15
-    if viewportWidth <= 1300  : rightSectionGap = f"{Configuration.ScalePx(165)}px"
-    elif viewportWidth <= 1380: rightSectionGap = f"{Configuration.ScalePx(105)}px"
-    else                      : rightSectionGap = Configuration.Spacing3
+    else                      : leftSectionGap = Configuration.Spacing2
+    if viewportWidth <= 1300  : rightSectionGap = f"{Configuration.ScalePx(200)}px"
+    elif viewportWidth <= 1380: rightSectionGap = f"{Configuration.ScalePx(150)}px"
+    else                      : rightSectionGap = Configuration.Spacing7
 
     colLeft, colRight = st.columns([1.2, 1])
     with colLeft      :
         RenderWhoWeAre()
         st.markdown(f'<div style="height: {leftSectionGap};"></div>', unsafe_allow_html=True)
-        RenderSlideshow()
+        RenderClientCarousel()
     with colRight     :
         RenderHowItWorks()
         st.markdown(f'<div style="height: {rightSectionGap};"></div>', unsafe_allow_html=True)
         RenderMap(cities, animate=animate)
-
-    RenderClientCarouselTest()

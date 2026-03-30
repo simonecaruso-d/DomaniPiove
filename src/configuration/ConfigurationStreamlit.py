@@ -238,6 +238,8 @@ FORMATO DI RISPOSTA:
 - Ogni attivita deve restare in un solo punto elenco su una sola riga, nel formato "Nome luogo: descrizione continua". Non andare mai a capo dopo i due punti e non creare sottopunti o righe aggiuntive per la stessa attivita.
 - Concludi ogni slot con una curiosità, un aneddoto, un angolo segreto per una foto o un insider tip.
 - Non ripetere queste istruzioni nella risposta. Non aggiungere titoli introduttivi. Parti direttamente con il programma.
+- Non inserire alcun tipo di nota finale.
+- Fai attenzione a rispettare le indentazioni degli elenchi: "Mattina", "Pomeriggio" e "Sera/Notte" devono essere allo stesso livello di indentazione, e le attività sotto di loro devono essere elencate con un'indentazione maggiore, ma tutte le attività devono essere allo stesso livello di indentazione tra loro.
 """
 
 # Streamlit Page

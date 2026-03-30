@@ -111,12 +111,17 @@ def PrepareRecordsForInsert(dataFrame, datetimeColumns, integerColumns=None):
 
     return records
 
-def InsertInBatches(supabaseClient, tableName, records, batchSize, progressDescription):
-    'Insert records in fixed-size batches'
+def InsertInBatches(supabaseClient, tableName, records, batchSize, progressDescription, onConflictColumns=None):
+    'Insert records in fixed-size batches, optionally using upsert on conflict columns'
     insertedRows = 0
+    onConflictClause = None if not onConflictColumns else ','.join(onConflictColumns)
     for index in tqdm(range(0, len(records), batchSize), desc=progressDescription):
         batch = records[index:index + batchSize]
-        ExecuteWithRetry(lambda batch=batch: supabaseClient.table(tableName).insert(batch).execute(), f'Insert batch in {tableName}')
+        if onConflictClause:
+            ExecuteWithRetry(lambda batch=batch, onConflictClause=onConflictClause:
+                             supabaseClient.table(tableName).upsert(batch, on_conflict=onConflictClause).execute(),
+                             f'Upsert batch in {tableName}')
+        else: ExecuteWithRetry(lambda batch=batch: supabaseClient.table(tableName).insert(batch).execute(), f'Insert batch in {tableName}')
         insertedRows += len(batch)
 
     return insertedRows
@@ -158,7 +163,11 @@ def WriteActualToSupabase(actualDf, supabaseUrl=Configuration.SupabaseUrl, supab
     try:
         supabaseClient: Client = create_client(supabaseUrl, supabaseKey)
 
-        uniqueCombinations             = actualDf[['Datetime', 'CityId']].drop_duplicates().copy()
+        dataToInsert = actualDf.copy()
+        if 'RetrievalDatetime' in dataToInsert.columns: dataToInsert = dataToInsert.sort_values(by=['RetrievalDatetime'])
+        dataToInsert = dataToInsert.drop_duplicates(subset=['Datetime', 'CityId'], keep='last')
+
+        uniqueCombinations             = dataToInsert[['Datetime', 'CityId']].drop_duplicates().copy()
         uniqueCombinations['Datetime'] = uniqueCombinations['Datetime'].map(NormalizeIsoDatetime)
         groupedKeys                    = uniqueCombinations.groupby(['CityId'])['Datetime'].agg(lambda values: sorted(set(values)))
 
@@ -171,8 +180,8 @@ def WriteActualToSupabase(actualDf, supabaseUrl=Configuration.SupabaseUrl, supab
 
             rowsDeletedForOverlap += len(datetimeValues)
 
-        records      = PrepareRecordsForInsert(actualDf, {'RetrievalDatetime', 'Datetime'}, {'CityId'})
-        rowsInserted = InsertInBatches(supabaseClient, tableName, records, batchSize, 'Actual | Insert rows')
+        records      = PrepareRecordsForInsert(dataToInsert, {'RetrievalDatetime', 'Datetime'}, {'CityId'})
+        rowsInserted = InsertInBatches(supabaseClient, tableName, records, batchSize, 'Actual | Insert rows', onConflictColumns=('Datetime', 'CityId'))
 
         return {'RowsDeletedForOverlap': rowsDeletedForOverlap, 'RowsInserted': rowsInserted}
 

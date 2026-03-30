@@ -301,12 +301,14 @@ def RenderParameterFilter():
     'Renders a radio button filter for selecting a meteorological phenomenon, applying custom CSS for styling.'
     st.markdown(ParameterFilterCss(), unsafe_allow_html=True)
     st.markdown('<div class="filters-section-title">Seleziona un fenomeno meteorologico:</div>', unsafe_allow_html=True)
-    selectedParameter = st.radio('Parametro', options=Configuration.Parameters, horizontal=True, index=0, key='accuracy_parameter_filter', label_visibility='collapsed')
+    llmBusy = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
+    selectedParameter = st.radio('Parametro', options=Configuration.Parameters, horizontal=True, index=0, key='forecast_parameter_filter', label_visibility='collapsed', disabled=llmBusy)
     return selectedParameter
 
 # Value Filters
 def RenderCitySelectbox(city):
     'Renders a selectbox for choosing a city, organized by state, with custom styling and formatting.'
+    llmBusy = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
     cityOptions = city.sort_values(['State', 'City'])
     treeOptions = [None]
     treeLabels  = {None: 'Seleziona città'}
@@ -320,37 +322,41 @@ def RenderCitySelectbox(city):
             treeOptions.append(key)
             treeLabels[key] = f'\u2003{row["City"]}'
 
-    citySelectedKey = st.selectbox('Città', options=treeOptions, format_func=lambda k: treeLabels.get(k, k), key='filterCity', label_visibility='collapsed')
+    citySelectedKey = st.selectbox('Città', options=treeOptions, format_func=lambda k: treeLabels.get(k, k), key='filterCity', label_visibility='collapsed', disabled=llmBusy)
     return (int(citySelectedKey.replace('__city__', '')) if citySelectedKey and citySelectedKey.startswith('__city__') else None)
 
 def RenderDateRangeInput(forecasts):
     'Renders a date range input for filtering forecasts, with dynamic minimum and maximum dates based on the forecast data.'
+    llmBusy          = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
     today           = pd.Timestamp.now(tz='Europe/Rome').date()
     nextWeek        = (pd.Timestamp(today) + pd.Timedelta(days=6)).date()
     forecastsDt     = pd.to_datetime(forecasts['Datetime'], errors='coerce')
     minForecastDate = forecastsDt.min().date()
     maxForecastDate = forecastsDt.max().date()
-    return st.date_input('Intervallo date', value=(today, nextWeek), min_value=minForecastDate, max_value=maxForecastDate, key='filterDate', label_visibility='collapsed', format='DD/MM/YYYY')
+    return st.date_input('Intervallo date', value=(today, nextWeek), min_value=minForecastDate, max_value=maxForecastDate, key='filterDate', label_visibility='collapsed', format='DD/MM/YYYY', disabled=llmBusy)
 
 def RenderPartOfDayMultiselect(calendar):
     'Renders a multiselect input for choosing parts of the day, with options translated to Italian.'
+    llmBusy             = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
     partOfDayOptionsENRaw = calendar['PartOfDay'].unique()
     partOfDayOptionsEN    = [p for p in Configuration.PartOfDayOrder if p in partOfDayOptionsENRaw]
     partOfDayOptionsIT    = [Configuration.PartOfDayToIta.get(p, p) for p in partOfDayOptionsEN]
-    partOfDaySelectedIT   = st.multiselect('Parte del giorno', options=partOfDayOptionsIT, default=[], placeholder='Tutte', key='filterPartOfDay', label_visibility='collapsed')
+    partOfDaySelectedIT   = st.multiselect('Parte del giorno', options=partOfDayOptionsIT, default=[], placeholder='Tutte', key='filterPartOfDay', label_visibility='collapsed', disabled=llmBusy)
     
     return (None if not partOfDaySelectedIT else [Configuration.PartOfDayToEng.get(v, v) for v in partOfDaySelectedIT])
 
 def RenderProviderMultiselect(forecasts):
     'Renders a multiselect input for choosing providers, with options sorted alphabetically.'
+    llmBusy             = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
     providerOptions     = sorted(forecasts['Provider'].unique())
-    providerSelectedRaw = st.multiselect('Provider', options=providerOptions, default=[], placeholder='Tutte', key='filterProvider', label_visibility='collapsed')
+    providerSelectedRaw = st.multiselect('Provider', options=providerOptions, default=[], placeholder='Tutte', key='filterProvider', label_visibility='collapsed', disabled=llmBusy)
     return None if not providerSelectedRaw else providerSelectedRaw
 
 def RenderRetrievalDateSelectbox(forecasts):
     'Renders a selectbox for choosing the forecast retrieval date, with options sorted in reverse chronological order and formatted as Italian dates.'
+    llmBusy        = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
     retrievalDates = sorted(pd.to_datetime(forecasts['RetrievalDatetime'].unique()), reverse=True)
-    return st.selectbox('Data Previsione', options=retrievalDates, format_func=lambda d: d.strftime('%d/%m/%Y'), index=0, key='filterRetrievalTime', label_visibility='collapsed')
+    return st.selectbox('Data Previsione', options=retrievalDates, format_func=lambda d: d.strftime('%d/%m/%Y'), index=0, key='filterRetrievalTime', label_visibility='collapsed', disabled=llmBusy)
 
 def RenderValueFilters(city, calendar, forecasts, animate=True):
     'Renders a set of filters for selecting city, date range, part of day, provider, and retrieval date, applying custom CSS for styling and layout.'
@@ -732,22 +738,32 @@ def RenderColumnLeft(animate, summaryTable):
 def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summaryTable):
     titleClass2        = 'forecast-enter-delay-2' if animate else ''
     cityName           = city[city['Id'] == selectedFilters['cityId']]['City'].iloc[0] if selectedFilters['cityId'] else "la città"
+    llmBusy            = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
     st.markdown(f"<div class='llm-title forecast-enter-item {titleClass2}'>Consigli del Concierge</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='llm-subtitle forecast-enter-item {titleClass2}'>Idee per attività da fare nei prossimi giorni in base allo scenario meteorologico</div>", unsafe_allow_html=True)
 
-    if st.button('✨ Genera suggerimenti', use_container_width=True):
+    if st.button('✨ Genera suggerimenti', use_container_width=True, disabled=llmBusy):
         st.session_state['llm_comment_cache'] = ''
         st.session_state['_streaming_active'] = True
+        st.session_state['llm_streaming_in_progress'] = True
+        st.rerun()
 
     conciergeSlot = st.empty()
 
     if st.session_state.get('_streaming_active'):
         st.session_state['_streaming_active'] = False
         fullText = ''
-        with st.spinner("Il Concierge sta analizzando le possibilità per te..."):
-            for chunk in GenerateLLMComment(cityName, staticEventsTable, summaryTable=summaryTable):
-                fullText += chunk
-                conciergeSlot.markdown(RenderConciergeMarkdownContainer(fullText), unsafe_allow_html=True)
+        st.session_state['llm_streaming_in_progress'] = True
+
+        try:
+            with st.spinner("Il Concierge sta analizzando le possibilità per te..."):
+                for chunk in GenerateLLMComment(cityName, staticEventsTable, summaryTable=summaryTable):
+                    fullText += chunk
+                    st.session_state['llm_comment_cache'] = fullText
+                    conciergeSlot.markdown(RenderConciergeMarkdownContainer(fullText), unsafe_allow_html=True)
+        finally:
+            st.session_state['llm_streaming_in_progress'] = False
+
         st.session_state['llm_comment_cache'] = fullText
 
     elif st.session_state.get('llm_comment_cache'): conciergeSlot.markdown(RenderConciergeMarkdownContainer(st.session_state['llm_comment_cache']), unsafe_allow_html=True)

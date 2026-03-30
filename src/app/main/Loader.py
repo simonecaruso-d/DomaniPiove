@@ -13,7 +13,7 @@ def GetBase64Logo(logoPath = Configuration.LogoPath):
 # CSS
 def HideRunningIndicatorCss():
     'Return CSS to hide Streamlit\'s default running indicator and style the custom loader.'
-    loaderMessageMaxWidth = Configuration.ScalePx(600)
+    loaderMessageMaxWidth = Configuration.ScalePx(760)
     loaderBarWidth        = Configuration.ScalePx(320)
     loaderBarHeight       = Configuration.ScalePx(8)
 
@@ -25,6 +25,21 @@ def HideRunningIndicatorCss():
             font-family: {Configuration.FontFamily} !important; color: {Configuration.WhiteColor} !important; text-shadow: 0 2px 12px rgba(0,0,0,0.4);
             letter-spacing: {Configuration.LetterSpacing2} !important; line-height: {Configuration.LineHeight3} !important;
             animation: glow 2.5s ease-in-out infinite alternate;}}
+        .loader-subtitle {{
+            font-size: {Configuration.FontSize5} !important; font-weight: {Configuration.FontWeight3} !important;
+            font-family: {Configuration.FontFamily} !important; color: {Configuration.WhiteColor} !important; opacity: 0.92;
+            letter-spacing: {Configuration.LetterSpacing1} !important; text-transform: uppercase;}}
+        .loader-countdown {{
+            display: flex; align-items: baseline; justify-content: center; gap: {Configuration.Spacing2};
+            color: {Configuration.WhiteColor} !important; margin-top: -{Configuration.Spacing2};}}
+        .loader-countdown-value {{
+            position: relative; display: grid; min-width: {Configuration.ScalePx(84)}px; height: {Configuration.ScalePx(44)}px;
+            font-size: {Configuration.FontSize9} !important; font-weight: {Configuration.FontWeight4} !important;
+            line-height: 1; text-align: center;}}
+        .loader-countdown-item {{ grid-area: 1 / 1; opacity: 0; }}
+        .loader-countdown-label {{
+            font-size: {Configuration.FontSize4} !important; font-weight: {Configuration.FontWeight2} !important;
+            opacity: 0.92; }}
         @keyframes glow {{ 0% {{ text-shadow: 0 0 12px rgba(255,255,255,{Configuration.Opacity2}); }} 100% {{ text-shadow: 0 4px 24px rgba(255,255,255,1); }} }}
         .loader-message {{
             font-size: {Configuration.FontSize7} !important; font-weight: {Configuration.FontWeight2} !important; line-height: {Configuration.LineHeight4} !important;
@@ -38,19 +53,63 @@ def HideRunningIndicatorCss():
         @keyframes loaderSweep {{ 0% {{ left: -35%; }} 100% {{ left: 100%; }} }}
     </style>"""
 
+def LoaderRotationCss(totalDuration, visibleUntil, fadeUntil):
+    'Return CSS to rotate loader messages without rerunning Streamlit.'
+    return f"""<style>
+        .loader-message-rotating {{position: relative; display: grid; width: 100%; min-height: {Configuration.ScalePx(120)}px; overflow: hidden; animation: none;}}
+        .loader-message-item {{grid-area: 1 / 1; opacity: 0; animation: loaderMessageRotate {totalDuration}s infinite;}}
+        @keyframes loaderMessageRotate {{
+            0%, {visibleUntil}% {{ opacity: 1; transform: translateY(0); }}
+            {fadeUntil}%, 100% {{ opacity: 0; transform: translateY(10px); }}}}
+    </style>"""
+
+def LoaderCountdownCss():
+    'Return CSS to animate a countdown from 60 to zero without rerunning Streamlit.'
+    return f"""<style>
+        .loader-countdown-item {{animation: loaderCountdownStep 1.12s ease-in-out both;}}
+        @keyframes loaderCountdownStep {{
+            0% {{ opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(1.5px); }}
+            18% {{ opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }}
+            78% {{ opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }}
+            100% {{ opacity: 0; transform: translateY(-10px) scale(1.015); filter: blur(1.5px); }}
+        }}
+        .loader-countdown-item-last {{animation: loaderCountdownLast 0.9s ease-out both;}}
+        @keyframes loaderCountdownLast {{
+            0% {{ opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(1.5px); }}
+            100% {{ opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }}
+        }}
+    </style>"""
+
 # Loader
 def RenderLoader(message = None):
     'Render a custom loading screen once and return its placeholder so the caller can clear it after loading.'
     st.markdown(HideRunningIndicatorCss(), unsafe_allow_html=True)
 
-    logoBase64 = GetBase64Logo()
-    slot       = st.empty()
-    message    = message or random.choice(Configuration.LoadingMessages)
+    logoBase64    = GetBase64Logo()
+    slot          = st.empty()
+    messages      = [message] if message else random.sample(Configuration.LoadingMessages, k=len(Configuration.LoadingMessages))
+    messageCount  = len(messages)
+    totalDuration = messageCount * 5
+    visibleUntil  = round(80 / messageCount, 4)
+    fadeUntil     = round(100 / messageCount, 4)
+    st.markdown(LoaderCountdownCss(), unsafe_allow_html=True)
+
+    countdownItems = ''.join(
+        f"<div class='loader-countdown-item' style='animation-delay: {index}s;'>{(60 - index) // 60:02d}:{(60 - index) % 60:02d}</div>" 
+        for index in range(60)) + "<div class='loader-countdown-item loader-countdown-item-last' style='animation-delay: 60s;'>00:00</div>"
+
+    if messageCount == 1: messageHtml = f"<div class='loader-message'>{messages[0]}</div>"
+    else:
+        st.markdown(LoaderRotationCss(totalDuration, visibleUntil, fadeUntil), unsafe_allow_html=True)
+        messageItems = ''.join(f"<div class='loader-message-item' style='animation-delay: -{index * 5}s;'>{currentMessage}</div>" for index, currentMessage in enumerate(messages))
+        messageHtml = f"<div class='loader-message loader-message-rotating'>{messageItems}</div>"
 
     slot.markdown(f"""
             <div class='loader-container'><div class='weather-emoji'><img src="data:image/png;base64,{logoBase64}" width="{Configuration.ScalePx(80)}"></div>
             <div class='loader-title'>Domani Piove</div>
-            <div class='loader-message'>{message}</div>
+            <div class='loader-subtitle'>Attesa stimata</div>
+            <div class='loader-countdown'><div class='loader-countdown-value'>{countdownItems}</div><div class='loader-countdown-label'>min:sec</div></div>
+            {messageHtml}
             <div class='loader-bar-track'><div class='loader-bar-fill'></div></div></div>""", unsafe_allow_html=True)
 
     return slot

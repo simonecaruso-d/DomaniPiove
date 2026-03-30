@@ -2,7 +2,7 @@
 import base64
 import pandas as pd
 import streamlit as st
-from urllib.parse import quote_plus
+from urllib.parse import urlencode
 
 import configuration.ConfigurationStreamlit as Configuration
 
@@ -43,10 +43,17 @@ def RenderSidebar(sidebarIcons, footerIcons, pages):
     currentPage     = GetCurrentPage(pages)
     navigationItems = []
 
+    currentVw = st.query_params.get('vw')
+    currentVh = st.query_params.get('vh')
+
     for page in pages:
         activeClass = 'active' if page == currentPage else ''
         icon        = sidebarIcons.get(page, '')
-        navigationItems.append(f"""<a class="sidebar-nav-item {activeClass}" href="?page={quote_plus(page)}" target="_self">
+        queryParams = {'page': page}
+        if currentVw: queryParams['vw'] = currentVw
+        if currentVh: queryParams['vh'] = currentVh
+        queryString = urlencode(queryParams)
+        navigationItems.append(f"""<a class="sidebar-nav-item {activeClass}" href="?{queryString}" target="_self">
                                <span class="sidebar-nav-item-content"><img class="sidebar-icon" src="data:image/png;base64,{icon}" alt="" /><span>{page}</span></span></a>""")
 
     emailIcon       = footerIcons.get('Email', '')
@@ -214,29 +221,28 @@ def RenderStyles(logo,
                     var sidebarWidth = Math.max({Configuration.ScalePx(60)}, Math.min(rawSidebarWidth, maxSafeLeft));
                     topbar.style.left = '0px';
                     topbar.style.paddingLeft = sidebarWidth + 'px';}}
-                function syncViewport() {{
+                function bootstrapViewport() {{
+                    var params = new URLSearchParams(window.location.search);
+                    var hasVw  = !!(params.get('vw') || '').trim();
+                    var hasVh  = !!(params.get('vh') || '').trim();
+                    if (hasVw && hasVh) return;
+
                     var widthBucket  = Math.round((window.innerWidth || 0) / 40) * 40;
                     var heightBucket = Math.round((window.innerHeight || 0) / 40) * 40;
                     if (!widthBucket || !heightBucket) return;
 
-                    var params = new URLSearchParams(window.location.search);
-                    var currentW = parseInt(params.get('vw') || '0', 10);
-                    var currentH = parseInt(params.get('vh') || '0', 10);
-                    if (currentW === widthBucket && currentH === heightBucket) return;
-
                     params.set('vw', String(widthBucket));
                     params.set('vh', String(heightBucket));
-                    window.location.search = '?' + params.toString();}}
+                    var query = params.toString();
+                    var nextUrl = window.location.pathname + (query ? '?' + query : '') + window.location.hash;
+                    window.location.replace(nextUrl);}}
                 function init() {{
                     syncTopbar();
-                    syncViewport();
+                    bootstrapViewport();
                     var sidebar = document.querySelector('[data-testid="stSidebar"]');
                     if (!sidebar) return;
                     new MutationObserver(syncTopbar).observe(sidebar, {{ attributes: true, attributeFilter: ['aria-expanded'] }});
-                    window.addEventListener('resize', syncTopbar);
-                    window.addEventListener('resize', function() {{
-                        clearTimeout(window.__dpResizeTimer);
-                        window.__dpResizeTimer = setTimeout(syncViewport, 200);}});}}
+                    window.addEventListener('resize', syncTopbar);}}
                 if (document.readyState === 'loading') {{document.addEventListener('DOMContentLoaded', init);}} else {{
                     var attempts = 0;
                     var poll = setInterval(function() {{
