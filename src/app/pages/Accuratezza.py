@@ -10,13 +10,13 @@ import configuration.ConfigurationStreamlit as Configuration
 def BestProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
     'Builds a styled HTML line for the best provider with dynamic spacing based on viewport width for optimal readability.'
     textGap = Configuration.Spacing0B if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing1
-    return (f"""<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
+    return (f"""<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">
             A {html.escape(label.lower())} di distanza, <span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> è il più affidabile con un errore medio di <b>{html.escape(maeFormatted)}</b>.</div>""")
 
 def WorstProviderLineHtml(label, providerName, maeFormatted, animationClass=''):
     'Builds a styled line for the worst provider with optional animation class. Adjusts bottom margin based on viewport width for better spacing.'
     textGap = Configuration.Spacing0B if Configuration.ResponsiveViewportWidth <= 1366 else Configuration.Spacing1
-    return (f"""<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">'
+    return (f"""<div class="accuracy-enter-item {animationClass}" style="margin-bottom:{textGap};font-size:{Configuration.FontSize3};color:{Configuration.Palette2Dark};line-height:{Configuration.LineHeight3};">
             A {html.escape(label.lower())} di distanza, <span style="font-weight:{Configuration.FontWeight2};">{html.escape(providerName)}</span> è il meno affidabile con un errore medio di <b>{html.escape(maeFormatted)}</b>.</div>""")
 
 def SectionHeaderHtml(text, animationClass=''):

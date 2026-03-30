@@ -721,16 +721,6 @@ def GenerateLLMComment(cityName, staticEventsTable, summaryTable,
     except Exception as e: yield BuildFriendlyLlmError(e)
 
 # Wrapper
-def RenderFirstPart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate):
-    st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
-    RenderForecastLineChart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate=animate)
-
-    st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
-
 def RenderColumnLeft(animate, summaryTable):
         titleClass = 'forecast-enter-delay-1' if animate else ''
         st.markdown(f"<div class='chart-title forecast-enter-item {titleClass}'>Posso uscire?</div>", unsafe_allow_html=True)
@@ -775,21 +765,22 @@ def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider,
 
     selectedFilters                     = RenderValueFilters(city, calendar, forecasts, animate=animate)
     st.session_state['selectedFilters'] = selectedFilters
-    
-    st.markdown(f"<div style='height: {Configuration.Spacing2};'></div>", unsafe_allow_html=True)
-    selectedParameter = RenderParameterFilter()
-
-    st.session_state['selectedParameter'] = selectedParameter
-    st.markdown(f"<div style='height: {Configuration.Spacing4};'></div>", unsafe_allow_html=True)
-
+    st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
     if selectedFilters['cityId'] is None: RenderNoCityAlert()
 
     forecasts   = BuildDf(city, calendar, forecasts)
     forecasts   = FilterDf(forecasts, selectedFilters)
     scoresTable = CalculateScore(GroupDf(forecasts))
 
-    RenderFirstPart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate)
-    
     columnLeft, columnRight = st.columns([1.25, 1])
     with columnLeft         : RenderColumnLeft(animate, scoresTable)
     with columnRight        : RenderColumnRight(animate, city, selectedFilters, staticEventsTable, CreateSummary(scoresTable))
+
+    selectedParameter                     = RenderParameterFilter()
+    st.session_state['selectedParameter'] = selectedParameter
+    st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
+    RenderForecastLineChart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate=animate)
