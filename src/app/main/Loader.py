@@ -85,19 +85,19 @@ def RenderLoader(message = None):
     'Render a custom loading screen once and return its placeholder so the caller can clear it after loading.'
     st.markdown(HideRunningIndicatorCss(), unsafe_allow_html=True)
 
-    logoBase64    = GetBase64Logo()
-    slot          = st.empty()
-    messages      = [message] if message else random.sample(Configuration.LoadingMessages, k=len(Configuration.LoadingMessages))
-    messageCount  = len(messages)
-    totalDuration = messageCount * 5
-    visibleUntil  = round(80 / messageCount, 4)
-    fadeUntil     = round(100 / messageCount, 4)
+    logoBase64        = GetBase64Logo()
+    slot              = st.empty()
+    messages          = [message] if message else random.sample(Configuration.LoadingMessages, k=len(Configuration.LoadingMessages))
+    messageCount      = len(messages)
+    totalDuration     = messageCount * 5
+    visibleUntil      = round(80 / messageCount, 4)
+    fadeUntil         = round(100 / messageCount, 4)
+    countdownDuration = random.randint(50, 70)
     st.markdown(LoaderCountdownCss(), unsafe_allow_html=True)
 
     countdownItems = ''.join(
-        f"<div class='loader-countdown-item' style='animation-delay: {index}s;'>{(60 - index) // 60:02d}:{(60 - index) % 60:02d}</div>" 
-        for index in range(60)) + "<div class='loader-countdown-item loader-countdown-item-last' style='animation-delay: 60s;'>00:00</div>"
-
+        f"<div class='loader-countdown-item' style='animation-delay: {index}s;'>{(countdownDuration - index) // 60:02d}:{(countdownDuration - index) % 60:02d}</div>" 
+        for index in range(countdownDuration)) + f"<div class='loader-countdown-item loader-countdown-item-last' style='animation-delay: {countdownDuration}s;'>00:00</div>"
     if messageCount == 1: messageHtml = f"<div class='loader-message'>{messages[0]}</div>"
     else:
         st.markdown(LoaderRotationCss(totalDuration, visibleUntil, fadeUntil), unsafe_allow_html=True)

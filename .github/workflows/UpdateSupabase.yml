@@ -2,7 +2,7 @@ name: Update Supabase
 
 on:
   schedule:
-    - cron: "0 6,7 * * *"
+    - cron: "0 6 * * *"  # Una sola volta, alle 6 UTC (= 8 Roma in inverno, 7 Roma in estate)
   workflow_dispatch:
 
 jobs:
@@ -10,52 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Should Run At Rome 08
-        id: schedule_gate
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          utc_hour=$(date -u +'%H')
-          rome_offset=$(TZ=Europe/Rome date +'%z')
-
-          # Run once/day at Rome 08, supporting CET (+0100) and CEST (+0200)
-          if [ "$rome_offset" = "+0200" ]; then
-            expected_utc_hour="06"
-          else
-            expected_utc_hour="07"
-          fi
-
-          echo "Gate debug -> utc_hour=$utc_hour rome_offset=$rome_offset expected_utc_hour=$expected_utc_hour"
-
-          if [ "$utc_hour" = "$expected_utc_hour" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Repository Checkout
-        if: steps.schedule_gate.outputs.should_run == 'true'
         uses: actions/checkout@v4
 
       - name: Python Setup
-        if: steps.schedule_gate.outputs.should_run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
 
       - name: Dependencies Installation
-        if: steps.schedule_gate.outputs.should_run == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Pipeline Run
-        if: steps.schedule_gate.outputs.should_run == 'true'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
