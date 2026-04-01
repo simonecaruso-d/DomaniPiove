@@ -739,7 +739,6 @@ def RenderColumnLeft(animate, summaryTable):
         st.markdown(f"<div style='height: 55px;'></div>", unsafe_allow_html=True)
         RenderForecastTable(summaryTable)
 
-@st.fragment
 def RenderColumnRight(animate, city, selectedFilters, staticEventsTable, summaryTable):
     titleClass2        = 'forecast-enter-delay-2' if animate else ''
     cityName           = city[city['Id'] == selectedFilters['cityId']]['City'].iloc[0] if selectedFilters['cityId'] else "la città"
