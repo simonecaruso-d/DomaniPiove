@@ -1,4 +1,5 @@
 # Environment Setting
+import datetime
 import html
 from httpx import stream
 import markdown
@@ -306,6 +307,11 @@ def RenderParameterFilter():
     return selectedParameter
 
 # Value Filters
+def ResetForecastDependentFilters():
+    'Resets dependent forecast filters when the selected city changes.'
+    for key in ['filterDate', 'filterPartOfDay', 'filterProvider', 'filterRetrievalTime']:
+        if key in st.session_state: del st.session_state[key]
+
 def RenderCitySelectbox(city):
     'Renders a selectbox for choosing a city, organized by state, with custom styling and formatting.'
     llmBusy = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
@@ -322,17 +328,22 @@ def RenderCitySelectbox(city):
             treeOptions.append(key)
             treeLabels[key] = f'\u2003{row["City"]}'
 
-    citySelectedKey = st.selectbox('Città', options=treeOptions, format_func=lambda k: treeLabels.get(k, k), key='filterCity', label_visibility='collapsed', disabled=llmBusy)
+    citySelectedKey = st.selectbox('Città', options=treeOptions, format_func=lambda k: treeLabels.get(k, k), key='filterCity', label_visibility='collapsed', disabled=llmBusy, on_change=ResetForecastDependentFilters)
     return (int(citySelectedKey.replace('__city__', '')) if citySelectedKey and citySelectedKey.startswith('__city__') else None)
 
-def RenderDateRangeInput(forecasts):
-    'Renders a date range input for filtering forecasts, with dynamic minimum and maximum dates based on the forecast data.'
-    llmBusy          = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
-    today           = pd.Timestamp.now(tz='Europe/Rome').date()
-    nextWeek        = (pd.Timestamp(today) + pd.Timedelta(days=6)).date()
-    forecastsDt     = pd.to_datetime(forecasts['Datetime'], errors='coerce')
+def RenderDateRangeInput(forecasts, cityIdSelected=None):
+    'Renders a date range input for filtering forecasts, with default values spanning the available data window.'
+    llmBusy = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
+
+    scopedForecasts = forecasts if cityIdSelected is None else forecasts[forecasts['CityId'] == cityIdSelected]
+    forecastsDt = pd.to_datetime(scopedForecasts['Datetime'], errors='coerce').dropna()
+    if forecastsDt.empty: forecastsDt = pd.to_datetime(forecasts['Datetime'], errors='coerce').dropna()
+
     minForecastDate = forecastsDt.min().date()
     maxForecastDate = forecastsDt.max().date()
+    today           = datetime.date.today()
+    nextWeek        = today + datetime.timedelta(days=7)
+
     return st.date_input('Intervallo date', value=(today, nextWeek), min_value=minForecastDate, max_value=maxForecastDate, key='filterDate', label_visibility='collapsed', format='DD/MM/YYYY', disabled=llmBusy)
 
 def RenderPartOfDayMultiselect(calendar):
@@ -369,7 +380,7 @@ def RenderValueFilters(city, calendar, forecasts, animate=True):
         cityIdSelected = RenderCitySelectbox(city)
     with columns[1]:
         st.markdown("<div class='filter-label'>Intervallo date</div>", unsafe_allow_html=True)
-        dateSelected = RenderDateRangeInput(forecasts)
+        dateSelected = RenderDateRangeInput(forecasts, cityIdSelected=cityIdSelected)
     with columns[2]:
         st.markdown("<div class='filter-label'>Parte del giorno</div>", unsafe_allow_html=True)
         partOfDaySelected = RenderPartOfDayMultiselect(calendar)
@@ -391,9 +402,9 @@ def RenderNoCityAlert():
 # Data Helpers
 def BuildDf(city, calendar, forecasts):
     'Builds a merged DataFrame from city, calendar, and forecasts data, dropping unnecessary columns.'
-    calendar.drop(columns=['CreatedAt', 'UpdatedAt'], inplace=True, errors='ignore')
-    city.drop(columns=['Province', 'Country', 'Region', 'Latitude', 'Longitude', 'CreatedAt', 'UpdatedAt'], inplace=True, errors='ignore')
-    forecasts.drop(columns=['Id', 'CreatedAt', 'UpdatedAt'], inplace=True, errors='ignore')
+    calendar = calendar.drop(columns=['CreatedAt', 'UpdatedAt'], errors='ignore')
+    city = city.drop(columns=['Province', 'Country', 'Region', 'Latitude', 'Longitude', 'CreatedAt', 'UpdatedAt'], errors='ignore')
+    forecasts = forecasts.drop(columns=['Id', 'CreatedAt', 'UpdatedAt'], errors='ignore')
     forecasts = forecasts.merge(city, left_on='CityId', right_on='Id', how='left').drop(columns=['Id'])
     forecasts = forecasts.merge(calendar, left_on='Datetime', right_on='Datetime', how='left')
     return forecasts
@@ -409,7 +420,7 @@ def FilterDf(df, selectedFilters):
         df = df[(pd.to_datetime(df['Datetime']).dt.date >= startDate) & (pd.to_datetime(df['Datetime']).dt.date <= endDate)]
 
     df = df[df['IsCurrent'] == 'Y']
-    df.drop(columns=['IsCurrent'], inplace=True, errors='ignore')
+    df = df.drop(columns=['IsCurrent'], errors='ignore')
     return df.reset_index(drop=True)
 
 def FilterAccuracyByProvider(df, selectedFilters):
@@ -559,6 +570,7 @@ def RenderForecastLineChart(df, selectedParameter, selectedFilters, forecastAccu
 # Table
 def GroupDf(df):
     'Groups the DataFrame by date and part of day, calculating the mean of specified weather parameters for each group.'
+    df = df.copy()
     df['Datetime'] = pd.to_datetime(df['Datetime']).dt.normalize()
     groupByColumns = ['Datetime', 'PartOfDay']
     valueColumn    = ['Temperature', 'FeltTemperature', 'Humidity', 'Visibility', 'PrecipitationProbability', 'Rain', 'Snowfall', 'CloudCover', 'WindSpeed']
@@ -602,6 +614,7 @@ def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
 
 def CalculateScore(df):
     'Calculates comfort scores for each row in the DataFrame by applying seasonal logic and combining the results with the original data.'
+    df = df.copy()
     df['Datetime'] = pd.to_datetime(df['Datetime'])
     if df.empty:
         scoreColumns = ['ScorePrecipitationProbability', 'ScoreRain', 'ScoreSnowfall', 'ScoreCloudCover', 'ScoreHumidity', 'ScoreWind', 'ScoreVisibility', 'ScoreFeltTemperature', 'FinalScore']
@@ -792,6 +805,7 @@ def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider,
 
     forecasts   = BuildDf(city, calendar, forecasts)
     forecasts   = FilterDf(forecasts, selectedFilters)
+    st.session_state['_forecasts_serialized'] = forecasts.to_dict()  # Force serialization without displaying
     scoresTable = CalculateScore(GroupDf(forecasts))
 
     columnLeft, columnRight = st.columns([1.25, 1])

@@ -35,7 +35,7 @@ def LoadData():
             try                          : loadedTables[tableName] = future.result()
             except Exception as readError: raise RuntimeError(f"Errore nel caricamento della tabella '{tableName}'") from readError
 
-    staticEvents               = loadedTables['StaticEvents'].drop(columns=['Id'], inplace=True)
+    staticEvents               = loadedTables['StaticEvents'].drop(columns=['Id'], errors='ignore')
     calendar                   = loadedTables['Calendar']
     city                       = loadedTables['City']
     forecast                   = loadedTables['Forecast']
