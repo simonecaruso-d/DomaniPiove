@@ -603,6 +603,10 @@ def ApplySeasonalLogic(row, weights=Configuration.ScoresWeights):
 def CalculateScore(df):
     'Calculates comfort scores for each row in the DataFrame by applying seasonal logic and combining the results with the original data.'
     df['Datetime'] = pd.to_datetime(df['Datetime'])
+    if df.empty:
+        scoreColumns = ['ScorePrecipitationProbability', 'ScoreRain', 'ScoreSnowfall', 'ScoreCloudCover', 'ScoreHumidity', 'ScoreWind', 'ScoreVisibility', 'ScoreFeltTemperature', 'FinalScore']
+        for col in scoreColumns: df[col] = pd.Series(dtype=float)
+        return df
     return pd.concat([df, df.apply(ApplySeasonalLogic, axis=1)], axis=1)
 
 def GetStatus(score):
@@ -635,6 +639,7 @@ def GetMotivation(row):
 def CreateSummary(df):
     'Creates a summary DataFrame with formatted date, day of the week, part of the day, score, indication, and main motivation for each forecast entry.'
     summaryDf              = df.copy()
+    summaryDf              = summaryDf.loc[:, ~summaryDf.columns.duplicated()]
     weekdayNamesIt         = {0: 'Lunedi', 1: 'Martedi', 2: 'Mercoledi', 3: 'Giovedi', 4: 'Venerdi', 5: 'Sabato', 6: 'Domenica'}
     summaryDf['PartOfDay'] = pd.Categorical(summaryDf['PartOfDay'], categories=Configuration.PartOfDayOrder, ordered=True)
     summaryDf              = summaryDf.sort_values(by=['Datetime', 'PartOfDay'])

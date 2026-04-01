@@ -16,7 +16,7 @@ import configuration.ConfigurationStreamlit as Configuration
 import db.ReadFromSupabase                  as SupabaseReader
 import db.TrackDashboardVisits              as VisitTracker
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600*6, show_spinner=False)
 def LoadData():
     'Load city and forecasts data from Supabase.'
     loadedTables   = {}
