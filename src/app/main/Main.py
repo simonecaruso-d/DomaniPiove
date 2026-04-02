@@ -1,6 +1,7 @@
 # Environment Setting
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import pandas as pd
 import streamlit as st
 import sys
 
@@ -15,6 +16,12 @@ import app.pages.Previsioni                 as ForecastElements
 import configuration.ConfigurationStreamlit as Configuration
 import db.ReadFromSupabase                  as SupabaseReader
 import db.TrackDashboardVisits              as VisitTracker
+
+def NormalizeForecastColumns(forecast):
+    'Normalize forecast columns used by the app.'
+    forecast = forecast.copy()
+    if 'RetrievalDatetime' in forecast.columns: forecast['RetrievalDatetime'] = pd.to_datetime(forecast['RetrievalDatetime'], errors='coerce').dt.date
+    return forecast
 
 @st.cache_data(ttl=3600*6, show_spinner=False)
 def LoadData():
@@ -38,7 +45,7 @@ def LoadData():
     staticEvents               = loadedTables['StaticEvents'].drop(columns=['Id'], errors='ignore')
     calendar                   = loadedTables['Calendar']
     city                       = loadedTables['City']
-    forecast                   = loadedTables['Forecast']
+    forecast                   = NormalizeForecastColumns(loadedTables['Forecast'])
     forecastAccuracyByDaySpan  = loadedTables['ForecastAccuracyByDaySpan']
     forecastAccuracyByProvider = loadedTables['ForecastAccuracyByProvider'] 
     updateDate                 = forecast['UpdatedAt'].max()
@@ -85,7 +92,10 @@ def Main():
         st.session_state['app_data'] = result
         staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = result
     
-    else: staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = st.session_state['app_data']
+    else:
+        staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate = st.session_state['app_data']
+        forecasts = NormalizeForecastColumns(forecasts)
+        st.session_state['app_data'] = (staticEvents, calendar, city, forecasts, forecastAccuracyByDaySpan, forecastAccuracyByProvider, updateDate)
         
     currentPage = HomeUI.RenderLayout(updateDate=updateDate)
     VisitTracker.TrackPageView(currentPage)

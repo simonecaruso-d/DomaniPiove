@@ -366,7 +366,8 @@ def RenderProviderMultiselect(forecasts):
 def RenderRetrievalDateSelectbox(forecasts):
     'Renders a selectbox for choosing the forecast retrieval date, with options sorted in reverse chronological order and formatted as Italian dates.'
     llmBusy        = bool(st.session_state.get('_streaming_active') or st.session_state.get('llm_streaming_in_progress'))
-    retrievalDates = sorted(pd.to_datetime(forecasts['RetrievalDatetime'].unique()), reverse=True)
+    retrievalDates = pd.to_datetime(forecasts['RetrievalDatetime'], errors='coerce').dt.date.dropna().unique().tolist()
+    retrievalDates = sorted(retrievalDates, reverse=True)
     return st.selectbox('Data Previsione', options=retrievalDates, format_func=lambda d: d.strftime('%d/%m/%Y'), index=0, key='filterRetrievalTime', label_visibility='collapsed', disabled=llmBusy)
 
 def RenderValueFilters(city, calendar, forecasts, animate=True):
@@ -414,7 +415,7 @@ def FilterDf(df, selectedFilters):
     if selectedFilters['cityId'] is not None           : df = df[df['CityId'] == selectedFilters['cityId']]
     if selectedFilters['partOfDay'] is not None        : df = df[df['PartOfDay'].isin(selectedFilters['partOfDay'])]
     if selectedFilters['provider'] is not None         : df = df[df['Provider'].isin(selectedFilters['provider'])]
-    if selectedFilters['retrievalDatetime'] is not None: df = df[pd.to_datetime(df['RetrievalDatetime']) == pd.to_datetime(selectedFilters['retrievalDatetime'])]
+    if selectedFilters['retrievalDatetime'] is not None: df = df[pd.to_datetime(df['RetrievalDatetime'], errors='coerce').dt.date == selectedFilters['retrievalDatetime']]
     if selectedFilters['dateRange'] is not None and len(selectedFilters['dateRange']) == 2:
         startDate, endDate = selectedFilters['dateRange']
         df = df[(pd.to_datetime(df['Datetime']).dt.date >= startDate) & (pd.to_datetime(df['Datetime']).dt.date <= endDate)]
@@ -803,10 +804,12 @@ def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider,
     st.markdown(f"<div style='height:{Configuration.Spacing4};'></div>", unsafe_allow_html=True)
     if selectedFilters['cityId'] is None: RenderNoCityAlert()
 
-    forecasts   = BuildDf(city, calendar, forecasts)
-    forecasts   = FilterDf(forecasts, selectedFilters)
-    st.session_state['_forecasts_serialized'] = forecasts.to_dict()  # Force serialization without displaying
-    scoresTable = CalculateScore(GroupDf(forecasts))
+    forecasts         = BuildDf(city, calendar, forecasts)
+    filteredForecasts = FilterDf(forecasts, selectedFilters)
+    #with st.expander("Visualizza dati grezzi"): st.dataframe(filteredForecasts, use_container_width=True)
+    print(f'[DEBUG] Filtered Forecasts: {len(filteredForecasts)} entries after applying filters: {selectedFilters}')
+
+    scoresTable = CalculateScore(GroupDf(filteredForecasts))
 
     columnLeft, columnRight = st.columns([1.25, 1])
     with columnLeft         : RenderColumnLeft(animate, scoresTable)
@@ -817,4 +820,4 @@ def RenderForecastContent(city, calendar, forecasts, forecastAccuracyByProvider,
     st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
     st.markdown(f"<div style='height:1px; background: rgba({HexToRgb(Configuration.Palette1VeryDark)}, 0.08); border-radius:{Configuration.Border1}; margin: 0 0 {Configuration.Spacing2} 0;'></div>", unsafe_allow_html=True)
     st.markdown(f"<div style='height:{Configuration.Spacing2};'></div>", unsafe_allow_html=True)
-    RenderForecastLineChart(forecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate=animate)
+    RenderForecastLineChart(filteredForecasts, selectedParameter, selectedFilters, forecastAccuracyByProvider, animate=animate)

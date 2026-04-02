@@ -10,6 +10,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import configuration.ConfigurationWeather as Configuration
 
+DefaultOrderByByTable = {'Calendar': 'Datetime'}
+
+def ResolveOrderBy(tableName, orderBy):
+    'Use a stable default ordering for paginated reads when callers do not specify one.'
+    if orderBy: return orderBy
+    return DefaultOrderByByTable.get(tableName, 'Id')
+
 # Helpers
 def BuildSelectClause(columns):
     'Build the SELECT clause for Supabase, normalizing columns name and managing the * case'
@@ -61,6 +68,7 @@ def SafeTableRead(supaBaseUrl = Configuration.SupabaseUrl, supabaseKey = Configu
                    maxRetries = Configuration.MaxRetries, baseRetryDelaySeconds = Configuration.BaseRetryDelaySeconds, jitterSeconds = Configuration.JitterSeconds):
     'Reads an entire Supabase table into a DataFrame, handling pagination, retries, and errors according to parameters'
     selectClause   = BuildSelectClause(columns)
+    effectiveOrderBy = ResolveOrderBy(tableName, orderBy)
     safePageSize   = max(1, min(pageSize, 1000))
     safeMaxRetries = max(1, maxRetries)
 
@@ -70,7 +78,7 @@ def SafeTableRead(supaBaseUrl = Configuration.SupabaseUrl, supabaseKey = Configu
     offset  = 0
 
     while True:
-        pageRows, lastException = SafeTableChunkFetch(supabaseClient, tableName, selectClause, filters, orderBy, ascending,
+        pageRows, lastException = SafeTableChunkFetch(supabaseClient, tableName, selectClause, filters, effectiveOrderBy, ascending,
                                                       offset, safePageSize, safeMaxRetries, baseRetryDelaySeconds, jitterSeconds)
 
         if pageRows is None:

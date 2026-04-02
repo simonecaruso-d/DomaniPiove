@@ -92,7 +92,7 @@ def RenderLoader(message = None):
     totalDuration     = messageCount * 5
     visibleUntil      = round(80 / messageCount, 4)
     fadeUntil         = round(100 / messageCount, 4)
-    countdownDuration = random.randint(50, 70)
+    countdownDuration = random.randint(45, 90)
     st.markdown(LoaderCountdownCss(), unsafe_allow_html=True)
 
     countdownItems = ''.join(
