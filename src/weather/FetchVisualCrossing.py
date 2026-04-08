@@ -22,11 +22,14 @@ def BuildVisualCrossingRecord(cityId, retrievalDatetime, hourEntry):
     'Map one Visual Crossing hourly entry to standardized output fields'
     temperature              = hourEntry.get('temp')
     feltTemperature          = hourEntry.get('feelslike')
-    humidity                 = hourEntry.get('humidity') / 100
+    humidityRaw              = hourEntry.get('humidity')
+    humidity                 = humidityRaw / 100 if humidityRaw is not None else None
     visibility               = Helpers.NormalizeVisibilityToMeters(hourEntry.get('visibility'), 'km')
     precipitation            = hourEntry.get('precip')
-    precipitationProbability = hourEntry.get('precipprob') / 100
-    cloudCover               = hourEntry.get('cloudcover') / 100
+    precipitationProbabilityRaw = hourEntry.get('precipprob')
+    precipitationProbability = precipitationProbabilityRaw / 100 if precipitationProbabilityRaw is not None else None
+    cloudCoverRaw            = hourEntry.get('cloudcover')
+    cloudCover               = cloudCoverRaw / 100 if cloudCoverRaw is not None else None
     windSpeed                = hourEntry.get('windspeed')
 
     precipitationTypes                    = hourEntry.get('preciptype') or []
@@ -59,7 +62,9 @@ def FetchVisualCrossing(cityId, latitude, longitude, forecastDays=Configuration.
     requestParameters = BuildVisualCrossingParams(Configuration.VisualCrossingApiKey)
     requestUrl        = f'{Configuration.VisualCrossingUrl}/{latitude},{longitude}'
     data              = Helpers.SafeRequest(requestUrl, requestParameters, 'VisualCrossing')
+    if not isinstance(data, dict): return []
     days              = data.get('days')
+    if not isinstance(days, list): return []
 
     for day in days:
         for hourEntry in day.get('hours', []):

@@ -21,6 +21,7 @@ def BuildMetNorwayRecord(cityId, retrievalDatetime, entry):
     temperature   = instant.get('air_temperature')
     humidity      = instant.get('relative_humidity')
     windSpeed     = instant.get('wind_speed')
+    cloudCover    = instant.get('cloud_area_fraction')
     precipitation = next1h.get('precipitation_amount')
 
     return {
@@ -35,7 +36,7 @@ def BuildMetNorwayRecord(cityId, retrievalDatetime, entry):
         'PrecipitationProbability': 1 if precipitation is not None and precipitation > 0 else 0 if precipitation is not None else None,
         'Rain'                    : precipitation,
         'Snowfall'                : Helpers.EstimateSnowfall(precipitation, temperature),
-        'CloudCover'              : instant.get('cloud_area_fraction') / 100 if instant.get('cloud_area_fraction') is not None else None,
+        'CloudCover'              : cloudCover / 100 if cloudCover is not None else None,
         'WindSpeed'               : Helpers.NormalizeWindSpeedToKmh(windSpeed, 'm/s')}
 
 def FetchMetNorway(cityId, latitude, longitude):
@@ -45,7 +46,9 @@ def FetchMetNorway(cityId, latitude, longitude):
 
     requestParameters = BuildMetNorwayParams(latitude, longitude)
     data              = Helpers.SafeRequest(Configuration.MetNorwayUrl, requestParameters, 'MetNorway', {'User-Agent': Configuration.MetNorwayUserAgent})
+    if not isinstance(data, dict): return []
     timeseries        = data.get('properties', {}).get('timeseries')
+    if not isinstance(timeseries, list): return []
 
     for entry in timeseries:
         record               = BuildMetNorwayRecord(cityId, retrievalDatetime, entry)

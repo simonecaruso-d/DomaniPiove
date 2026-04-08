@@ -15,6 +15,10 @@ def BuildOpenMeteoParams(latitude, longitude, forecastDays):
 
 def BuildOpenMeteoRecord(cityId, retrievalDatetime, hourly, index):
     'Map one Open-Meteo hourly position to standardized output fields'
+    humidity                 = hourly['relative_humidity_2m'][index]
+    precipitationProbability = hourly['precipitation_probability'][index]
+    cloudCover               = hourly['cloud_cover'][index]
+
     return {
         'Provider'                : 'OpenMeteo',
         'RetrievalDatetime'       : Helpers.ParseIsoDateTime(retrievalDatetime),
@@ -22,12 +26,12 @@ def BuildOpenMeteoRecord(cityId, retrievalDatetime, hourly, index):
         'CityId'                  : cityId,
         'Temperature'             : hourly['temperature_2m'][index],
         'FeltTemperature'         : hourly['apparent_temperature'][index],
-        'Humidity'                : hourly['relative_humidity_2m'][index] / 100,
+        'Humidity'                : humidity / 100 if humidity is not None else None,
         'Visibility'              : Helpers.NormalizeVisibilityToMeters(hourly['visibility'][index], 'm'),
-        'PrecipitationProbability': hourly['precipitation_probability'][index] / 100,
+        'PrecipitationProbability': precipitationProbability / 100 if precipitationProbability is not None else None,
         'Rain'                    : hourly['rain'][index],
         'Snowfall'                : hourly['snowfall'][index],
-        'CloudCover'              : hourly['cloud_cover'][index] / 100,
+        'CloudCover'              : cloudCover / 100 if cloudCover is not None else None,
         'WindSpeed'               : hourly['wind_speed_10m'][index]}
 
 def FetchOpenMeteo(cityId, latitude, longitude, forecastDays=Configuration.OthersMaxForecastDays):
@@ -40,6 +44,7 @@ def FetchOpenMeteo(cityId, latitude, longitude, forecastDays=Configuration.Other
     
     if not isinstance(data, dict): return []
     hourly                       = data.get('hourly')
+    if not isinstance(hourly, dict) or 'time' not in hourly: return []
 
     for index in range(len(hourly['time'])):
         record               = BuildOpenMeteoRecord(cityId, retrievalDateTime, hourly, index)

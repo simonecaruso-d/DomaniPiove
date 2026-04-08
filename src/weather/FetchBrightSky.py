@@ -55,7 +55,9 @@ def FetchBrightSky(cityId, latitude, longitude, forecastDays=Configuration.Brigh
 
     requestParameters = BuildBrightSkyParams(latitude, longitude, forecastDays)
     data              = Helpers.SafeRequest(Configuration.BrightSkyUrl, requestParameters, 'BrightSky')
+    if not isinstance(data, dict): return []
     entries           = data.get('weather')
+    if not isinstance(entries, list): return []
 
     for entry in entries:
         record = BuildBrightSkyRecord(cityId, retrievalDatetime, entry)
