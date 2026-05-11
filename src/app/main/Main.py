@@ -1,5 +1,6 @@
 # Environment Setting
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 from pathlib import Path
 import pandas as pd
 import streamlit as st
@@ -26,12 +27,15 @@ def NormalizeForecastColumns(forecast):
 @st.cache_data(ttl=3600*6, show_spinner=False)
 def LoadData():
     'Load city and forecasts data from Supabase.'
+    daysAgo14 = (datetime.now() - timedelta(days=14)).isoformat()
+    dateFilter = {'Datetime': {'gte': daysAgo14}}
+
     loadedTables   = {}
     tableReadTasks = {
         'StaticEvents'              : lambda: SupabaseReader.SafeTableRead(tableName='StaticEvents', columns='*'),
         'Calendar'                  : lambda: SupabaseReader.SafeTableRead(tableName='Calendar', columns='*'),
         'City'                      : lambda: SupabaseReader.SafeTableRead(tableName='City', columns='*'),
-        'Forecast'                  : lambda: SupabaseReader.SafeTableRead(tableName='Forecast', columns='*'),
+        'Forecast'                  : lambda: SupabaseReader.SafeTableRead(tableName='Forecast', columns='*', filters=dateFilter, orderBy='Datetime'),
         'ForecastAccuracyByDaySpan' : lambda: SupabaseReader.SafeTableRead(tableName='ForecastAccuracyByDaySpan', columns=['Provider', 'DaySpan', 'Metric', 'MAE']),
         'ForecastAccuracyByProvider': lambda: SupabaseReader.SafeTableRead(tableName='ForecastAccuracyByProvider', columns=['Provider', 'Metric', 'MAE'])}
   

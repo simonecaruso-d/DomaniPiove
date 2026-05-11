@@ -44,9 +44,17 @@ def SafeTableChunkFetch(supabaseClient, tableName, selectClause, filters, orderB
 
             if filters:
                 for filterColumn, filterValue in filters.items():
-                    if isinstance(filterValue, (list, tuple, set)): query = query.in_(filterColumn, list(filterValue))
-                    elif filterValue is None                      : query = query.is_(filterColumn, 'null')
-                    else                                          : query = query.eq(filterColumn, filterValue)
+                    if isinstance(filterValue, dict):
+                        for operator, value in filterValue.items():
+                            if operator == 'gte': query = query.gte(filterColumn, value)
+                            elif operator == 'gt':  query = query.gt(filterColumn, value)
+                            elif operator == 'lte': query = query.lte(filterColumn, value)
+                            elif operator == 'lt':  query = query.lt(filterColumn, value)
+                            elif operator == 'neq': query = query.neq(filterColumn, value)
+                    
+                    elif isinstance(filterValue, (list, tuple, set)):  query = query.in_(filterColumn, list(filterValue))
+                    elif filterValue is None: query = query.is_(filterColumn, 'null')
+                    else: query = query.eq(filterColumn, filterValue)
 
             if orderBy                                            : query = query.order(orderBy, desc=not ascending)
 
@@ -55,6 +63,7 @@ def SafeTableChunkFetch(supabaseClient, tableName, selectClause, filters, orderB
 
         except Exception as requestError:
             lastException = requestError
+            print(f"DEBUG: Tentativo fallito. Errore: {requestError}")
             if attempt < maxRetries:
                 sleepSeconds = baseRetryDelaySeconds * (2 ** (attempt - 1))
                 sleepSeconds += random.uniform(0, max(0.0, jitterSeconds))

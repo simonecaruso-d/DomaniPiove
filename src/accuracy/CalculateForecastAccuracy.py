@@ -1,4 +1,5 @@
 # Environment Setting
+from datetime import datetime, timedelta
 import os
 import numpy as np
 import pandas as pd
@@ -23,8 +24,11 @@ def AssignDaySpan(forecastLeadDays):
 # Calculate
 def BuildAggregatedData(columnsToSelect=Configuration.MetricColumns + ['CityId', 'Datetime', 'RetrievalDatetime', 'Provider']):
     'Build a row-level table linking each forecast row to the matching actual for the same city and datetime'
-    forecastDf = SupabaseReader.SafeTableRead(tableName='Forecast', columns=columnsToSelect)
-    actualDf   = SupabaseReader.SafeTableRead(tableName='Actual', columns=columnsToSelect)
+    daysAgo14 = (datetime.now() - timedelta(days=14)).isoformat()
+    dateFilter = {'Datetime': {'gte': daysAgo14}}
+    
+    forecastDf = SupabaseReader.SafeTableRead(tableName='Forecast', columns=columnsToSelect, filters=dateFilter, orderBy='Datetime')
+    actualDf   = SupabaseReader.SafeTableRead(tableName='Actual', columns=columnsToSelect, filters=dateFilter, orderBy='Datetime')
 
     forecastDf['RetrievalDatetime'] = pd.to_datetime(forecastDf['RetrievalDatetime'], utc=True, errors='coerce')
     forecastDf['Datetime']          = pd.to_datetime(forecastDf['Datetime'], utc=True, errors='coerce')
