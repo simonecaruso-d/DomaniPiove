@@ -27,8 +27,8 @@ def NormalizeForecastColumns(forecast):
 @st.cache_data(ttl=3600*6, show_spinner=False)
 def LoadData():
     'Load city and forecasts data from Supabase.'
-    daysAgo14 = (datetime.now() - timedelta(days=14)).isoformat()
-    dateFilter = {'Datetime': {'gte': daysAgo14}}
+    daysAgo7 = (datetime.now() - timedelta(days=7)).isoformat()
+    dateFilter = {'Datetime': {'gte': daysAgo7}}
 
     loadedTables   = {}
     tableReadTasks = {
